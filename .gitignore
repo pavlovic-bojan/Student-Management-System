@@ -43,6 +43,7 @@ Thumbs.db
 *.sublime-workspace
 
 # Cursor AI
+.cursor/
 .cursor/rules/
 .cursor/cache/
 .cursor/temp/
