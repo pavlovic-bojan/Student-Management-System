@@ -1,0 +1,63 @@
+name: 🎨 Frontend Deploy to Vercel
+
+# Trigger on push to main branch (frontend changes only)
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend-deploy-vercel.yml'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  deploy:
+    name: Deploy Frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout code
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Setup Node.js
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 3. Install dependencies
+      - name: 📦 Install dependencies
+        run: |
+          cd frontend
+          npm install
+
+      # 4. Run tests before deploy
+      - name: 🧪 Run frontend tests
+        run: |
+          cd frontend
+          npm test
+
+      # 5. Build production bundle (VITE_API_URL points to backend API)
+      - name: 🏗️ Build for production
+        env:
+          VITE_API_URL: ${{ secrets.BACKEND_URL }}/api
+        run: |
+          cd frontend
+          npm run build
+
+      # 6. Deploy to Vercel
+      - name: 🚀 Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: ./frontend
+          vercel-args: '--prod'
+
+      # 7. Notify on success
+      - name: ✅ Deployment successful
+        if: success()
+        run: |
+          echo "✅ Frontend deployed successfully!"
+          echo "🔗 URL: Check Vercel dashboard or project settings"

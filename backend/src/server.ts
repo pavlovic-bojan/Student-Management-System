@@ -7,6 +7,7 @@ import fs from 'fs';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yaml';
 
+import { env } from './config/env';
 import { tenantContext } from './middleware/tenantContext';
 import { errorHandler } from './middleware/errorHandler';
 import { registerHealthRoutes } from './modules/health/health.routes';
@@ -24,7 +25,8 @@ const app = express();
 app.use(helmet());
 app.use(
   cors({
-    origin: '*',
+    origin: env.corsOrigin || '*',
+    credentials: !!env.corsOrigin,
   }),
 );
 app.use(express.json());

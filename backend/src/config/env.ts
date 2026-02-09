@@ -8,6 +8,8 @@ export interface EnvConfig {
   databaseUrl: string;
   jwtSecret: string;
   sessionSecret: string;
+  /** CORS allowed origin. If set, only this origin is allowed; otherwise allow all (*). */
+  corsOrigin: string | undefined;
 }
 
 function requireEnv(name: string): string {
@@ -24,5 +26,6 @@ export const env: EnvConfig = {
   databaseUrl: requireEnv('DATABASE_URL'),
   jwtSecret: requireEnv('JWT_SECRET'),
   sessionSecret: requireEnv('SESSION_SECRET'),
+  corsOrigin: process.env.CORS_ORIGIN,
 };
 
