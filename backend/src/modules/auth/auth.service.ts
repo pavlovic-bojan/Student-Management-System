@@ -77,7 +77,7 @@ export async function login(data: LoginRequest): Promise<{ user: AuthUserRespons
     throw new ApiError('Account is suspended', 403);
   }
 
-  const tenantIds = [user.tenantId, ...user.userTenants.map((ut) => ut.tenantId)];
+  const tenantIds = [user.tenantId, ...user.userTenants.map((ut: { tenantId: string }) => ut.tenantId)];
   const { password: _p, userTenants, ...rest } = user;
   const authUser = toAuthUser(rest, tenantIds);
   const token = signToken(user.id, user.tenantId, user.role);
@@ -91,7 +91,7 @@ export async function getTenantIdsForUser(userId: string): Promise<string[]> {
     select: { tenantId: true, userTenants: { select: { tenantId: true } } },
   });
   if (!user) return [];
-  const ids = new Set<string>([user.tenantId, ...user.userTenants.map((ut) => ut.tenantId)]);
+  const ids = new Set<string>([user.tenantId, ...user.userTenants.map((ut: { tenantId: string }) => ut.tenantId)]);
   return Array.from(ids);
 }
 
@@ -111,7 +111,7 @@ export async function getMe(userId: string): Promise<AuthUserResponse> {
   if (!user) {
     throw new ApiError('User not found', 404);
   }
-  const tenantIds = [user.tenantId, ...user.userTenants.map((ut) => ut.tenantId)];
+  const tenantIds = [user.tenantId, ...user.userTenants.map((ut: { tenantId: string }) => ut.tenantId)];
   const { userTenants, ...rest } = user;
   return toAuthUser(rest, tenantIds);
 }
@@ -141,7 +141,7 @@ export async function listUsers(tenantId: string): Promise<UserListItem[]> {
     },
     orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
   });
-  return users.map((u) => ({
+  return users.map((u: { id: string; email: string; firstName: string; lastName: string; role: UserRole; tenantId: string; suspended: boolean; createdAt: Date }) => ({
     ...u,
     createdAt: u.createdAt.toISOString(),
   }));

@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type Request, type Response, type NextFunction } from 'express';
 import { body } from 'express-validator';
 import { createProgramsService } from './programs.service.factory';
 import { ProgramsController } from './programs.controller';
@@ -24,7 +24,7 @@ export function registerProgramRoutes(api: Router): void {
   router.get(
     '/',
     authenticate,
-    (req, res, next) => controller.listPrograms(req, res).catch(next),
+    (req: Request, res: Response, next: NextFunction) => controller.listPrograms(req, res).catch(next),
   );
 
   /**
@@ -62,7 +62,7 @@ export function registerProgramRoutes(api: Router): void {
       body('name').trim().notEmpty().withMessage('Name is required'),
       body('code').trim().notEmpty().withMessage('Code is required'),
     ],
-    (req, res, next) => controller.createProgram(req, res).catch(next),
+    (req: Request, res: Response, next: NextFunction) => controller.createProgram(req, res).catch(next),
   );
 
   api.use('/programs', router);

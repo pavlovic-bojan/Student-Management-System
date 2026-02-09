@@ -1,4 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
+import { UserRole } from '@prisma/client';
 import { body, param, query } from 'express-validator';
 import * as authService from './auth.service';
 import { authenticate } from '../../middleware/authenticate';
@@ -253,6 +254,7 @@ export function registerAuthRoutes(api: Router): void {
           }
           const result = await authService.register({
             ...data,
+            role: data.role as UserRole,
             tenantId: data.tenantId,
           });
           return res.status(201).json(result);
@@ -266,6 +268,7 @@ export function registerAuthRoutes(api: Router): void {
         const tenantId = callerRole === 'SCHOOL_ADMIN' ? req.user!.tenantId : data.tenantId;
         const result = await authService.register({
           ...data,
+          role: data.role as UserRole,
           tenantId,
         });
         res.status(201).json(result);

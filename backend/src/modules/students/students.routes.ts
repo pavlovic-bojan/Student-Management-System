@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type Request, type Response, type NextFunction } from 'express';
 import { body } from 'express-validator';
 import { createStudentsService } from './students.service.factory';
 import { StudentsController } from './students.controller';
@@ -24,7 +24,7 @@ export function registerStudentRoutes(api: Router): void {
   router.get(
     '/',
     authenticate,
-    (req, res, next) => controller.listStudents(req, res).catch(next),
+    (req: Request, res: Response, next: NextFunction) => controller.listStudents(req, res).catch(next),
   );
 
   /**
@@ -73,7 +73,7 @@ export function registerStudentRoutes(api: Router): void {
       body('firstName').trim().notEmpty().withMessage('firstName is required'),
       body('lastName').trim().notEmpty().withMessage('lastName is required'),
     ],
-    (req, res, next) => controller.createStudent(req, res).catch(next),
+    (req: Request, res: Response, next: NextFunction) => controller.createStudent(req, res).catch(next),
   );
 
   api.use('/students', router);

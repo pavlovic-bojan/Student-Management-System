@@ -18,6 +18,7 @@ Backend for the multi-tenant Student Management System (SMS). Built with **Expre
 - [Running tests](#running-tests)
 - [Scripts reference](#scripts-reference)
 - [Swagger / OpenAPI](#swagger--openapi)
+- [Deploy (e.g. Render)](#deploy-eg-render)
 
 ---
 
@@ -47,6 +48,7 @@ backend/
 │   ├── middleware/      # tenantContext, authenticate, errorHandler
 │   ├── modules/         # Feature modules (per domain)
 │   │   ├── health/      # Health check
+│   │   ├── auth/        # Auth (login, register, me) + Users (list, PATCH, DELETE)
 │   │   ├── tenant/      # Tenants CRUD
 │   │   ├── students/    # Students CRUD
 │   │   ├── programs/    # Programs CRUD
@@ -59,14 +61,17 @@ backend/
 │   ├── server.ts        # Express app (no listen — for tests)
 │   ├── index.ts         # Entry point (listens on PORT)
 │   └── __tests__/
-│       ├── helpers/      # mockRequest, mockResponse, mockNext
+│       ├── helpers/     # mockRequest, mockResponse, mockNext
 │       ├── unit/        # Unit tests (services, use cases, middleware)
-│       └── integration/  # Integration tests (HTTP + DB)
+│       └── integration/ # Integration tests (HTTP + DB)
+├── openapi.yaml         # OpenAPI 3.0 spec (served as Swagger UI at /api-docs)
 ├── vitest.config.ts
 ├── vitest.setup.ts      # NODE_ENV=test, SKIP_AUTH_FOR_TESTS, DATABASE_URL
 ├── .env.example
 └── package.json
 ```
+
+**Build note:** Production build excludes test files (`src/__tests__`, `**/*.test.ts`, `**/*.spec.ts`) via `tsconfig.json`. Tests run only when executing the test suite.
 
 Each feature module typically has: **routes**, **controller**, **service**, **repository** (interface + Prisma impl), **DTOs**, **model**, and optionally **use-cases** and **factory** for dependency injection.
 
@@ -110,12 +115,12 @@ npm run prisma:seed
 # Development (with tsx)
 npm run dev
 
-# Production build and start
+# Production build and start (build runs prisma generate + tsc)
 npm run build
 npm start
 ```
 
-The API is served at `http://localhost:4000` (or your `PORT`). Base path for all domain APIs is `/api` (e.g. `/api/health`, `/api/tenants`, `/api/students`).
+The API is served at `http://localhost:4000` (or your `PORT`). Base path for all domain APIs is `/api` (e.g. `/api/health`, `/api/tenants`, `/api/students`). Interactive API docs (Swagger UI) are at **`/api-docs`**.
 
 ---
 
@@ -231,46 +236,60 @@ npm test
 # or
 npx vitest run
 
-# Unit only
+# Unit only (no database needed — always passes if code is OK)
 npm run test:unit
 
 # Integration only (requires running PostgreSQL and migrated test DB)
 npm run test:integration
 ```
 
-Ensure PostgreSQL is running and that the test database exists and is migrated. If you use a different test DB URL, set `DATABASE_URL` (and optionally `JWT_SECRET`, `SESSION_SECRET`) so that `vitest.setup.ts` or your env leaves the app in test mode with the correct DB.
+**Will tests pass?**
+
+- **Unit tests** (`npm run test:unit`): Do **not** use a real database. They use mocks and run in isolation. They will pass as long as the code compiles and the tests are up to date.
+- **Integration tests** (`npm run test:integration`): Send real HTTP requests and use a **real PostgreSQL database**. They need:
+  - PostgreSQL running locally (or a reachable DB).
+  - A dedicated test database (e.g. `sms_test`) created and migrated.
+  - `DATABASE_URL` set to that DB (e.g. in `.env` or in `vitest.setup.ts`; default in setup is `postgresql://test:test@localhost:5432/sms_test`).
+
+If you don’t have a test DB locally, run only **`npm run test:unit`**; integration tests will still run (and pass) on CI when `TEST_DATABASE_URL` is set in GitHub Actions (or your CI) and the DB is migrated.
 
 ---
 
 ## Scripts reference
 
-| Script              | Command                      | Description |
-|---------------------|------------------------------|-------------|
-| `dev`               | `tsx src/server.ts`          | Run app in development (no build). |
-| `build`             | `tsc -p tsconfig.json`       | Compile TypeScript to `dist/`. |
-| `start`             | `node dist/server.js`        | Run production build. |
-| `test`              | `npx vitest run`             | Run all tests. |
-| `test:unit`         | `npx vitest run --testPathPattern=unit` | Run unit tests only. |
-| `test:integration`  | `npx vitest run --testPathPattern=integration` | Run integration tests only. |
-| `lint`              | `eslint "src/**/*.ts"`       | Lint TypeScript sources. |
-| `prisma:migrate`    | `prisma migrate dev`         | Apply migrations (interactive). |
-| `prisma:generate`   | `prisma generate`           | Generate Prisma client. |
-| `prisma:seed`       | `tsx prisma/seed.ts`         | Run seed script (clears and repopulates DB). |
+| Script              | Command                                      | Description |
+|---------------------|----------------------------------------------|-------------|
+| `dev`               | `tsx src/index.ts`                           | Run app in development (no build). |
+| `build`             | `prisma generate && tsc -p tsconfig.json`    | Generate Prisma client and compile TypeScript to `dist/`. |
+| `start`             | `node dist/index.js`                         | Run production build. |
+| `test`              | `npx vitest run`                             | Run all tests (unit + integration). |
+| `test:unit`         | `npx vitest run unit`                        | Run unit tests only (no DB required). |
+| `test:integration`  | `npx vitest run integration`                 | Run integration tests only (requires test DB). |
+| `lint`              | `eslint "src/**/*.ts"`                        | Lint TypeScript sources. |
+| `prisma:migrate`    | `prisma migrate dev`                         | Apply migrations (interactive). |
+| `prisma:generate`   | `prisma generate`                            | Generate Prisma client. |
+| `prisma:seed`       | `tsx prisma/seed.ts`                         | Run seed script (clears and repopulates DB). |
 
-From the **repository root** (npm workspaces), you can use root-level scripts such as `npm run backend:dev`, `npm run backend:test`, `npm run backend:test:unit`, `npm run backend:test:integration`, etc., if defined in the root `package.json`.
+From the **repository root** (npm workspaces), you can use root-level scripts such as `npm run backend:dev`, `npm run backend:test`, etc., if defined in the root `package.json`.
 
 ---
 
 ## Swagger / OpenAPI
 
 - **OpenAPI spec**: `openapi.yaml` in the backend root describes all endpoints (Health, Auth, Users, Tenants, Students, Programs, Courses, Exams, Finance, Records), including request/response schemas and security (bearer JWT). Paths are relative to base path `/api`.
-- **JSDoc in code**: Route files use `@swagger` JSDoc comments for the same endpoints; these can be used with `swagger-jsdoc` to generate the spec at runtime.
-- **Optional Swagger UI**: To serve interactive docs, install `swagger-jsdoc` and `swagger-ui-express`, then mount the generated spec (or serve `openapi.yaml`) at e.g. `/api-docs`. Example:
-  ```bash
-  npm install swagger-jsdoc swagger-ui-express @types/swagger-ui-express
-  ```
-  Then in `server.ts`: generate spec with `swaggerJsdoc(options)` (options.apis pointing at route files) and `app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(spec))`.
+- **Swagger UI**: Served at **`/api-docs`**. The app loads `openapi.yaml` and serves it via `swagger-ui-express`. Locally: `http://localhost:4000/api-docs`. In production: `https://<your-backend-url>/api-docs`.
+- **JSDoc in code**: Route files use `@swagger` JSDoc comments for the same endpoints; these can be used with `swagger-jsdoc` to generate the spec at runtime if you switch to a code-driven spec later.
 
 ---
 
-This README describes the backend application, its layout, configuration, APIs, auth and multi-tenancy, tests, and OpenAPI documentation.
+## Deploy (e.g. Render)
+
+- **Build command**: `npm install && npm run build` (build already includes `prisma generate`).
+- **Start command**: `npm start` (runs `node dist/index.js`).
+- **Root directory**: Set to `backend` if the repo root is the project root.
+- **Environment variables**: Set `DATABASE_URL`, `JWT_SECRET`, and `SESSION_SECRET` in the service dashboard. Do not commit `.env`; use the platform’s env config.
+- **Migrations**: Run Prisma migrations against the production DB before or as part of deploy (e.g. in CI: `npx prisma migrate deploy`), or via a release phase if the platform supports it.
+
+---
+
+This README describes the backend application, its layout, configuration, APIs, auth and multi-tenancy, tests, OpenAPI documentation, and deployment.

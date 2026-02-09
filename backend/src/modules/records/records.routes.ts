@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type Request, type Response, type NextFunction } from 'express';
 import { body } from 'express-validator';
 import { createRecordsService } from './records.service.factory';
 import { RecordsController } from './records.controller';
@@ -24,7 +24,7 @@ export function registerRecordsRoutes(api: Router): void {
   router.get(
     '/transcripts',
     authenticate,
-    (req, res, next) => controller.listTranscripts(req, res).catch(next),
+    (req: Request, res: Response, next: NextFunction) => controller.listTranscripts(req, res).catch(next),
   );
 
   /**
@@ -56,7 +56,7 @@ export function registerRecordsRoutes(api: Router): void {
     '/transcripts',
     authenticate,
     [body('studentId').trim().notEmpty().withMessage('studentId is required')],
-    (req, res, next) => controller.generateTranscript(req, res).catch(next),
+    (req: Request, res: Response, next: NextFunction) => controller.generateTranscript(req, res).catch(next),
   );
 
   api.use('/records', router);

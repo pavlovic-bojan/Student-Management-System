@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type Request, type Response, type NextFunction } from 'express';
 import { body } from 'express-validator';
 import { createCoursesService } from './courses.service.factory';
 import { CoursesController } from './courses.controller';
@@ -24,7 +24,7 @@ export function registerCourseRoutes(api: Router): void {
   router.get(
     '/',
     authenticate,
-    (req, res, next) => controller.listCourses(req, res).catch(next),
+    (req: Request, res: Response, next: NextFunction) => controller.listCourses(req, res).catch(next),
   );
 
   /**
@@ -64,7 +64,7 @@ export function registerCourseRoutes(api: Router): void {
       body('name').trim().notEmpty().withMessage('Name is required'),
       body('code').trim().notEmpty().withMessage('Code is required'),
     ],
-    (req, res, next) => controller.createCourse(req, res).catch(next),
+    (req: Request, res: Response, next: NextFunction) => controller.createCourse(req, res).catch(next),
   );
 
   api.use('/courses', router);

@@ -7,24 +7,26 @@ export class FinanceRepository implements IFinanceRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
   async createTuition(tenantId: string, data: CreateTuitionDto): Promise<TuitionModel> {
-    return this.prisma.tuition.create({
+    const row = await this.prisma.tuition.create({
       data: {
         ...data,
         amount: data.amount,
         tenantId,
       },
     });
+    return { ...row, amount: Number(row.amount) };
   }
 
   async listTuitions(tenantId: string): Promise<TuitionModel[]> {
-    return this.prisma.tuition.findMany({
+    const rows = await this.prisma.tuition.findMany({
       where: { tenantId },
       orderBy: { name: 'asc' },
     });
+    return rows.map((r) => ({ ...r, amount: Number(r.amount) }));
   }
 
   async createPayment(tenantId: string, data: CreatePaymentDto): Promise<PaymentModel> {
-    return this.prisma.payment.create({
+    const row = await this.prisma.payment.create({
       data: {
         ...data,
         amount: data.amount,
@@ -32,12 +34,14 @@ export class FinanceRepository implements IFinanceRepository {
         tenantId,
       },
     });
+    return { ...row, amount: Number(row.amount) };
   }
 
   async listPayments(tenantId: string): Promise<PaymentModel[]> {
-    return this.prisma.payment.findMany({
+    const rows = await this.prisma.payment.findMany({
       where: { tenantId },
       orderBy: { paidAt: 'desc' },
     });
+    return rows.map((r) => ({ ...r, amount: Number(r.amount) }));
   }
 }

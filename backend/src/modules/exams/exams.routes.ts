@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type Request, type Response, type NextFunction } from 'express';
 import { body } from 'express-validator';
 import { createExamsService } from './exams.service.factory';
 import { ExamsController } from './exams.controller';
@@ -24,7 +24,7 @@ export function registerExamRoutes(api: Router): void {
   router.get(
     '/periods',
     authenticate,
-    (req, res, next) => controller.listExamPeriods(req, res).catch(next),
+    (req: Request, res: Response, next: NextFunction) => controller.listExamPeriods(req, res).catch(next),
   );
 
   /**
@@ -66,7 +66,7 @@ export function registerExamRoutes(api: Router): void {
       body('term').trim().notEmpty().withMessage('Term is required'),
       body('year').isInt({ min: 2000, max: 2100 }).withMessage('Year is required'),
     ],
-    (req, res, next) => controller.createExamPeriod(req, res).catch(next),
+    (req: Request, res: Response, next: NextFunction) => controller.createExamPeriod(req, res).catch(next),
   );
 
   /**
@@ -84,7 +84,7 @@ export function registerExamRoutes(api: Router): void {
   router.get(
     '/terms',
     authenticate,
-    (req, res, next) => controller.listExamTerms(req, res).catch(next),
+    (req: Request, res: Response, next: NextFunction) => controller.listExamTerms(req, res).catch(next),
   );
 
   /**
@@ -127,7 +127,7 @@ export function registerExamRoutes(api: Router): void {
       body('courseOfferingId').trim().notEmpty().withMessage('courseOfferingId is required'),
       body('date').trim().notEmpty().withMessage('date is required'),
     ],
-    (req, res, next) => controller.createExamTerm(req, res).catch(next),
+    (req: Request, res: Response, next: NextFunction) => controller.createExamTerm(req, res).catch(next),
   );
 
   api.use('/exams', router);

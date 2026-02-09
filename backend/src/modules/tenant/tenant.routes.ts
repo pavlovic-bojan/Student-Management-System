@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type Request, type Response, type NextFunction } from 'express';
 import { body } from 'express-validator';
 import { createTenantService } from './tenant.service.factory';
 import { TenantController } from './tenant.controller';
@@ -18,7 +18,7 @@ export function registerTenantRoutes(api: Router): void {
    *       200:
    *         description: List of tenants
    */
-  router.get('/', (req, res, next) =>
+  router.get('/', (req: Request, res: Response, next: NextFunction) =>
     controller.listTenants(req, res).catch(next),
   );
 
@@ -56,7 +56,7 @@ export function registerTenantRoutes(api: Router): void {
       body('name').trim().notEmpty().withMessage('Name is required'),
       body('code').trim().notEmpty().withMessage('Code is required'),
     ],
-    (req, res, next) => controller.createTenant(req, res).catch(next),
+    (req: Request, res: Response, next: NextFunction) => controller.createTenant(req, res).catch(next),
   );
 
   api.use('/tenants', router);

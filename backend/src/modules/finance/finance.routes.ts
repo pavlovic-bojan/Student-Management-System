@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type Request, type Response, type NextFunction } from 'express';
 import { body } from 'express-validator';
 import { createFinanceService } from './finance.service.factory';
 import { FinanceController } from './finance.controller';
@@ -24,7 +24,7 @@ export function registerFinanceRoutes(api: Router): void {
   router.get(
     '/tuitions',
     authenticate,
-    (req, res, next) => controller.listTuitions(req, res).catch(next),
+    (req: Request, res: Response, next: NextFunction) => controller.listTuitions(req, res).catch(next),
   );
 
   /**
@@ -62,7 +62,7 @@ export function registerFinanceRoutes(api: Router): void {
       body('name').trim().notEmpty().withMessage('Name is required'),
       body('amount').isFloat({ min: 0 }).withMessage('Amount must be a positive number'),
     ],
-    (req, res, next) => controller.createTuition(req, res).catch(next),
+    (req: Request, res: Response, next: NextFunction) => controller.createTuition(req, res).catch(next),
   );
 
   /**
@@ -80,7 +80,7 @@ export function registerFinanceRoutes(api: Router): void {
   router.get(
     '/payments',
     authenticate,
-    (req, res, next) => controller.listPayments(req, res).catch(next),
+    (req: Request, res: Response, next: NextFunction) => controller.listPayments(req, res).catch(next),
   );
 
   /**
@@ -127,7 +127,7 @@ export function registerFinanceRoutes(api: Router): void {
       body('amount').isFloat({ min: 0 }).withMessage('Amount must be a positive number'),
       body('paidAt').trim().notEmpty().withMessage('paidAt is required'),
     ],
-    (req, res, next) => controller.createPayment(req, res).catch(next),
+    (req: Request, res: Response, next: NextFunction) => controller.createPayment(req, res).catch(next),
   );
 
   api.use('/finance', router);
