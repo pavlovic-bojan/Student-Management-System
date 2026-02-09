@@ -158,6 +158,37 @@ Concrete structure in the repository can differ (e.g., `backend`, `frontend`, `t
   - Create, update, deactivate, manage metadata (name, address, billing).
 - All audit and logs include `tenant_id` for traceability.
 
+### 7.1 User Creation and Account Management
+
+There is **no public user registration**. Only authenticated users with the appropriate role can create other users. Who can create whom, and when, is defined as follows.
+
+#### Who can create users
+
+| Creator role      | Can create roles                    | Tenant scope                    | When / UI |
+|-------------------|-------------------------------------|---------------------------------|-----------|
+| **Platform Admin**| Any role (Platform Admin, School Admin, Professor, Student) | Any tenant (creator chooses in UI) | Menu: "Korisnici" (list users) + "Kreiraj korisnika". |
+| **School Admin**  | School Admin, Professor, Student only (cannot create Platform Admin) | Own tenant only                 | Menu: "Korisnici" + "Kreiraj korisnika". |
+| **Professor**     | Student only                        | Only tenants the professor belongs to (if 2+ institutions, professor must choose which tenant the student belongs to) | Menu: only "Kreiraj studenta" (no user list). |
+| **Student**       | —                                   | —                               | Cannot create users. |
+
+#### Rules in short
+
+- **Platform Admin:** Can create any user in any tenant. In the UI they see the "Users" list (with tenant selector) and "Create user".
+- **School Admin:** Can create only School Admin, Professor, and Student, and only in their own institution (tenant). Cannot assign the Platform Admin role. Sees "Users" list (for their school) and "Create user".
+- **Professor:** Can create **only students**, and only for an institution they belong to. If the professor is linked to more than one university (multi-tenant via `UserTenant`), they must **choose** which tenant the new student belongs to in the "Create student" form. In the UI the professor sees only "Create student" (no "Users" list).
+- **Student:** Cannot create users.
+
+#### User management (list, edit, suspend, delete)
+
+- **Platform Admin:** Can list users per tenant (tenant selector), and edit, suspend (lock account), and delete any user in the selected tenant. Cannot delete their own account.
+- **School Admin:** Can list, edit, suspend, and delete only users of **their own** tenant (other School Admins, Professors, Students of that school). Cannot edit or delete Platform Admins; cannot delete their own account. Suspend = lock account (suspended users cannot log in).
+- **Professor:** No access to user list or user management; only "Create student" as above.
+- **Student:** No user management.
+
+#### Suspended accounts
+
+- A user can be marked as **suspended** (locked). Suspended users receive an error (e.g. 403 "Account is suspended") on login and cannot use the system until an admin unsuspends them.
+
 ---
 
 ## 8. Frontend UI / Wireframes Requirements
@@ -198,8 +229,11 @@ Concrete structure in the repository can differ (e.g., `backend`, `frontend`, `t
   - Handles tenant context, authentication, logging, rate limiting
 - **Auth Service**
   - User management, tenant management
+  - User creation rules per role (Platform Admin / School Admin / Professor); see §7.1
+  - User list, edit, suspend (lock account), delete (Platform Admin, School Admin; School Admin scoped to own tenant)
   - JWT issuance, refresh tokens
   - RBAC (roles & permissions)
+  - Login rejects suspended accounts
   - Audit logging for logins and admin actions
 - **Students Service**
   - Student CRUD
@@ -340,12 +374,13 @@ Concrete structure in the repository can differ (e.g., `backend`, `frontend`, `t
 - **Implementation Order / Todo:**
   1. Create User and Tenant database models.
   2. Implement JWT authentication.
-  3. User registration/login flows.
+  3. User registration/login flows (no public registration; see §7.1).
   4. Tenant CRUD endpoints.
   5. Implement RBAC middleware.
-  6. Audit logging.
-  7. Unit and integration tests.
-- **Use Cases:** Tenant admin creates users, user login, unauthorized access handling.
+  6. User creation and management (list, edit, suspend, delete) per §7.1.
+  7. Audit logging.
+  8. Unit and integration tests.
+- **Use Cases:** Platform Admin / School Admin / Professor create users per §7.1; user login (including reject if suspended); list/edit/suspend/delete users (Platform Admin, School Admin); unauthorized access handling.
 
 ### EPIC 3 – Students Service
 - **Goal:** Manage student records per tenant.
@@ -448,5 +483,5 @@ Concrete structure in the repository can differ (e.g., `backend`, `frontend`, `t
 ## 16. Approval
 
 **Prepared by:** Bojan Pavlovic  
-**Version:** 2.0 (merged from `sms_brd_v1` and `sms_brd_v2`)
+**Version:** 2.1 (added §7.1 User Creation and Account Management; EPIC 2 and Auth Service updated)
 

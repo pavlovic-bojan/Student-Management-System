@@ -1,0 +1,391 @@
+openapi: 3.0.3
+info:
+  title: Student Management System API
+  description: Multi-tenant SMS backend. Auth and user creation rules per BRD §7.1 (Platform Admin, School Admin, Professor).
+  version: 1.0.0
+
+servers:
+  - url: /api
+    description: API base path
+
+tags:
+  - name: Health
+  - name: Auth
+  - name: Users
+  - name: Tenants
+  - name: Students
+  - name: Programs
+  - name: Courses
+  - name: Exams
+  - name: Finance
+  - name: Records
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT from login response
+
+  schemas:
+    UserListItem:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        firstName: { type: string }
+        lastName: { type: string }
+        role: { type: string, enum: [PLATFORM_ADMIN, SCHOOL_ADMIN, PROFESSOR, STUDENT] }
+        tenantId: { type: string, format: uuid }
+        suspended: { type: boolean }
+        createdAt: { type: string, format: date-time }
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      tags: [Health]
+      responses:
+        '200': { description: API is healthy, content: { application/json: { schema: { type: object, properties: { status: { type: string, example: ok } } } } } }
+
+  /auth/login:
+    post:
+      summary: Login
+      description: Returns user and JWT. 403 if account is suspended.
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+      responses:
+        '200': { description: User and token }
+        '401': { description: Invalid email or password }
+        '403': { description: Account is suspended }
+
+  /auth/register:
+    post:
+      summary: Create user (no public registration)
+      description: Platform Admin any role/tenant; School Admin only SCHOOL_ADMIN/PROFESSOR/STUDENT in own tenant; Professor only STUDENT in own tenant(s).
+      tags: [Auth]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, firstName, lastName, role, tenantId]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, minLength: 8 }
+                firstName: { type: string }
+                lastName: { type: string }
+                role: { type: string, enum: [PLATFORM_ADMIN, SCHOOL_ADMIN, PROFESSOR, STUDENT] }
+                tenantId: { type: string, format: uuid }
+      responses:
+        '201': { description: User created (user + token) }
+        '401': { description: Missing or invalid token }
+        '403': { description: Forbidden }
+        '404': { description: Tenant not found }
+        '409': { description: Email already exists }
+
+  /auth/forgot-password:
+    post:
+      summary: Forgot password
+      tags: [Auth]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        '200': { description: Message }
+
+  /auth/me:
+    get:
+      summary: Current user
+      description: Returns current user (including tenantIds for professors on multiple tenants).
+      tags: [Auth]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: User object }
+        '401': { description: Missing or invalid token }
+
+  /auth/logout:
+    post:
+      summary: Logout
+      tags: [Auth]
+      responses:
+        '200': { description: Message }
+
+  /users:
+    get:
+      summary: List users for a tenant
+      description: Platform Admin must pass tenantId query; School Admin uses own tenant. Only Platform Admin or School Admin.
+      tags: [Users]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: query
+          name: tenantId
+          schema: { type: string, format: uuid }
+          description: Required for Platform Admin; ignored for School Admin
+      responses:
+        '200': { description: List of users, content: { application/json: { schema: { type: object, properties: { users: { type: array, items: { $ref: '#/components/schemas/UserListItem' } } } } } } }
+        '400': { description: Platform Admin did not provide tenantId }
+        '401': { description: Missing or invalid token }
+        '403': { description: Caller is not Platform Admin or School Admin }
+
+  /users/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+    patch:
+      summary: Update user (edit, suspend)
+      description: Platform Admin or School Admin; School Admin only for same tenant.
+      tags: [Users]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName: { type: string }
+                lastName: { type: string }
+                role: { type: string, enum: [PLATFORM_ADMIN, SCHOOL_ADMIN, PROFESSOR, STUDENT] }
+                suspended: { type: boolean }
+      responses:
+        '200': { description: Updated user }
+        '401': { description: Missing or invalid token }
+        '403': { description: Forbidden }
+        '404': { description: User not found }
+    delete:
+      summary: Delete user
+      description: Cannot delete own account. School Admin only for same tenant.
+      tags: [Users]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '204': { description: User deleted }
+        '400': { description: Cannot delete your own account }
+        '401': { description: Missing or invalid token }
+        '403': { description: Forbidden }
+        '404': { description: User not found }
+
+  /tenants:
+    get:
+      summary: List all tenants
+      tags: [Tenants]
+      responses:
+        '200': { description: List of tenants }
+    post:
+      summary: Create tenant
+      tags: [Tenants]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, code]
+              properties:
+                name: { type: string }
+                code: { type: string }
+      responses:
+        '201': { description: Tenant created }
+        '409': { description: Code already exists }
+
+  /students:
+    get:
+      summary: List students for current tenant
+      tags: [Students]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: List of students }
+    post:
+      summary: Create student for current tenant
+      tags: [Students]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [indexNumber, firstName, lastName]
+              properties:
+                indexNumber: { type: string }
+                firstName: { type: string }
+                lastName: { type: string }
+                programId: { type: string, format: uuid }
+      responses:
+        '201': { description: Student created }
+        '409': { description: Index already exists }
+
+  /programs:
+    get:
+      summary: List programs for current tenant
+      tags: [Programs]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: List of programs }
+    post:
+      summary: Create program
+      tags: [Programs]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, code]
+              properties:
+                name: { type: string }
+                code: { type: string }
+      responses:
+        '201': { description: Program created }
+
+  /courses:
+    get:
+      summary: List courses for current tenant
+      tags: [Courses]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: List of courses }
+    post:
+      summary: Create course
+      tags: [Courses]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, code]
+              properties:
+                name: { type: string }
+                code: { type: string }
+                programId: { type: string, format: uuid }
+      responses:
+        '201': { description: Course created }
+
+  /exams/periods:
+    get:
+      summary: List exam periods
+      tags: [Exams]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: List of periods }
+    post:
+      summary: Create exam period
+      tags: [Exams]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                term: { type: string }
+                year: { type: integer }
+      responses:
+        '201': { description: Period created }
+
+  /exams/terms:
+    get:
+      summary: List exam terms
+      tags: [Exams]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: List of terms }
+    post:
+      summary: Create exam term
+      tags: [Exams]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                periodId: { type: string, format: uuid }
+                date: { type: string, format: date-time }
+      responses:
+        '201': { description: Term created }
+
+  /finance/tuitions:
+    get:
+      summary: List tuitions
+      tags: [Finance]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: List of tuitions }
+    post:
+      summary: Create tuition
+      tags: [Finance]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                amount: { type: number }
+      responses:
+        '201': { description: Tuition created }
+
+  /finance/payments:
+    get:
+      summary: List payments
+      tags: [Finance]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: List of payments }
+    post:
+      summary: Create payment
+      tags: [Finance]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                studentId: { type: string, format: uuid }
+                tuitionId: { type: string, format: uuid }
+                amount: { type: number }
+                paidAt: { type: string, format: date-time }
+      responses:
+        '201': { description: Payment created }
+
+  /records/transcripts:
+    get:
+      summary: List transcripts
+      tags: [Records]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: List of transcripts }
+    post:
+      summary: Create/generate transcript
+      tags: [Records]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                studentId: { type: string, format: uuid }
+      responses:
+        '201': { description: Transcript created }

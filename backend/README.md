@@ -17,6 +17,7 @@ Backend for the multi-tenant Student Management System (SMS). Built with **Expre
 - [Integration tests](#integration-tests)
 - [Running tests](#running-tests)
 - [Scripts reference](#scripts-reference)
+- [Swagger / OpenAPI](#swagger--openapi)
 
 ---
 
@@ -131,6 +132,8 @@ The API is served at `http://localhost:4000` (or your `PORT`). Base path for all
 | Area     | Base path      | Main endpoints (all under `/api`) |
 |----------|----------------|------------------------------------|
 | Health   | `/api/health`   | `GET /` → `{ status: 'ok' }` |
+| **Auth** | `/api/auth`     | `POST /login`, `POST /register`, `GET /me`, `POST /forgot-password`, `POST /logout` |
+| **Users**| `/api/users`   | `GET /` (list by tenant), `PATCH /:id` (edit, suspend), `DELETE /:id` |
 | Tenants  | `/api/tenants`  | `GET /`, `POST /` (name, code) |
 | Students | `/api/students` | `GET /`, `POST /` (indexNumber, firstName, lastName, optional programId) |
 | Programs | `/api/programs` | `GET /`, `POST /` (name, code) |
@@ -138,6 +141,8 @@ The API is served at `http://localhost:4000` (or your `PORT`). Base path for all
 | Exams    | `/api/exams`    | `GET/POST /periods`, `GET/POST /terms` |
 | Finance  | `/api/finance`  | `GET/POST /tuitions`, `GET/POST /payments` |
 | Records  | `/api/records`  | `GET/POST /transcripts` |
+
+**Auth & Users rules (BRD §7.1):** No public registration. Only Platform Admin, School Admin, or Professor can create users (Professor only students, in own tenant(s)). List/edit/suspend/delete users: Platform Admin or School Admin only (School Admin scoped to own tenant). Suspended accounts cannot log in (403).
 
 Protected routes require either a valid **JWT** in `Authorization: Bearer <token>` or, in test mode, the special headers described below.
 
@@ -151,6 +156,7 @@ Protected routes require either a valid **JWT** in `Authorization: Bearer <token
   - **Test mode**: When `NODE_ENV=test` and `SKIP_AUTH_FOR_TESTS=1`, authentication can be bypassed by sending:
     - `x-test-tenant-id`: tenant ID (required for bypass)
     - `x-test-user-id`: optional user ID (defaults to `test-user`)
+    - `x-test-role`: optional role (defaults to `SCHOOL_ADMIN`; use `PLATFORM_ADMIN`, `PROFESSOR`, etc. for role-specific tests)
   No JWT is needed in that case. This is used only by the test suite.
 
 All tenant-scoped APIs filter data by `tenantId` (from JWT or test headers).
@@ -165,9 +171,11 @@ Unit tests live under `src/__tests__/unit/`. They **do not** hit the real server
 
 - **Use cases**: e.g. `CreateTenantUseCase`, `CreateStudentUseCase` — business rules, repository calls, and error cases (e.g. duplicate code → 409).
 - **Services**: Tenant, Students, Programs, Courses, Exams, Finance, Records — list/create logic with mocked repositories.
+- **Auth service**: `register` (409 duplicate email, 404 tenant not found, 201 success), `login` (401 invalid, 403 suspended, 200 success), `listUsers`, `updateUser` (404, 403 cross-tenant, 200), `deleteUser` (400 delete self, 404, 403, 204).
 - **Middleware**:
   - `tenantContext`: sets `req.tenantId` from `x-tenant-id`.
-  - `authenticate`: 401 when no/invalid token; in test mode, bypass when `x-test-tenant-id` is set.
+  - `authenticate`: 401 when no/invalid token; in test mode, bypass when `x-test-tenant-id` is set; optional `x-test-role`.
+  - `requireAdminOrSchoolAdmin` / `requireCanCreateUser`: 403 when role not allowed.
   - `errorHandler`: maps `ApiError` to status codes and JSON body.
 
 **Helpers:** `src/__tests__/helpers/testHelpers.ts` provides `mockRequest`, `mockResponse`, and `mockNext()` for controller/middleware tests.
@@ -189,6 +197,7 @@ Integration tests live under `src/__tests__/integration/`. They send **real HTTP
 **What is tested:**
 
 - **Health**: `GET /api/health` returns 200 and `{ status: 'ok' }`.
+- **Auth & Users**: `auth.test.ts` — login (200, 401 invalid, 403 suspended), register (201 Platform Admin, 403 School Admin creating PLATFORM_ADMIN, 403 Professor creating non-STUDENT), GET /api/users (401, 403 Professor, 200 Platform/School Admin), PATCH /api/users/:id (200 edit, suspend), DELETE /api/users/:id (400 delete self, 204). Uses test bypass with `x-test-role` and real DB (tenant + users created in `beforeAll`).
 - **Tenants**: `GET /api/tenants`, `POST /api/tenants`; duplicate code returns 409.
 - **Students**: 401 without auth; with `x-test-tenant-id` + `x-test-user-id`, GET list and POST create; duplicate index in same tenant returns 409; 400 when tenant context is missing.
 - **Programs, Courses, Exams, Finance, Records**: For each, create a tenant (and any required entities) in `beforeAll`, then call GET/POST with test headers; assert status codes and response shape; cleanup in `afterAll`.
@@ -252,4 +261,16 @@ From the **repository root** (npm workspaces), you can use root-level scripts su
 
 ---
 
-This README describes the backend application, its layout, configuration, APIs, auth and multi-tenancy, and how unit and integration tests are structured and run.
+## Swagger / OpenAPI
+
+- **OpenAPI spec**: `openapi.yaml` in the backend root describes all endpoints (Health, Auth, Users, Tenants, Students, Programs, Courses, Exams, Finance, Records), including request/response schemas and security (bearer JWT). Paths are relative to base path `/api`.
+- **JSDoc in code**: Route files use `@swagger` JSDoc comments for the same endpoints; these can be used with `swagger-jsdoc` to generate the spec at runtime.
+- **Optional Swagger UI**: To serve interactive docs, install `swagger-jsdoc` and `swagger-ui-express`, then mount the generated spec (or serve `openapi.yaml`) at e.g. `/api-docs`. Example:
+  ```bash
+  npm install swagger-jsdoc swagger-ui-express @types/swagger-ui-express
+  ```
+  Then in `server.ts`: generate spec with `swaggerJsdoc(options)` (options.apis pointing at route files) and `app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(spec))`.
+
+---
+
+This README describes the backend application, its layout, configuration, APIs, auth and multi-tenancy, tests, and OpenAPI documentation.

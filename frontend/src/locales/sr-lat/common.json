@@ -1,5 +1,12 @@
 {
   "appTitle": "Student Management System",
+  "theme": {
+    "lightMode": "Svetla tema",
+    "darkMode": "Tamna tema"
+  },
+  "auth": {
+    "logout": "Odjavi se"
+  },
   "nav": {
     "title": "Navigacija",
     "tickets": "Tiketi",
@@ -11,7 +18,27 @@
     "programs": "Programi",
     "courses": "Kursevi",
     "exams": "Ispiti",
-    "records": "Dosije"
+    "records": "Dosije",
+    "createUser": "Kreiraj korisnika",
+    "createStudent": "Kreiraj studenta",
+    "users": "Korisnici"
+  },
+  "createUser": {
+    "title": "Kreiraj korisnika",
+    "titleStudent": "Kreiraj studenta",
+    "firstName": "Ime",
+    "lastName": "Prezime",
+    "email": "Email",
+    "password": "Lozinka",
+    "role": "Uloga",
+    "tenant": "Institucija",
+    "submit": "Kreiraj",
+    "success": "Korisnik je kreiran.",
+    "back": "Nazad",
+    "rolePlatformAdmin": "Platform Admin",
+    "roleSchoolAdmin": "Školski Admin",
+    "roleProfessor": "Profesor",
+    "roleStudent": "Student"
   },
   "tenant": {
     "select": "Izaberi tenant",
@@ -75,5 +102,19 @@
     "gpa": "Prosek",
     "generatedAt": "Generisano",
     "empty": "Nema transkripta"
+  },
+  "users": {
+    "title": "Korisnici",
+    "createUser": "Kreiraj korisnika",
+    "selectTenant": "Izaberite instituciju da vidite korisnike.",
+    "name": "Ime i prezime",
+    "suspended": "Suspendovan",
+    "edit": "Izmeni",
+    "suspend": "Suspenduj",
+    "unsuspend": "Ukloni suspenziju",
+    "delete": "Obriši",
+    "confirmDelete": "Da li ste sigurni da želite da obrišete korisnika \"{name}\"?",
+    "empty": "Nema korisnika.",
+    "loadError": "Greška pri učitavanju korisnika."
   }
 }

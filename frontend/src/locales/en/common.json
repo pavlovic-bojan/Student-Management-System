@@ -1,5 +1,12 @@
 {
   "appTitle": "Student Management System",
+  "theme": {
+    "lightMode": "Light mode",
+    "darkMode": "Dark mode"
+  },
+  "auth": {
+    "logout": "Log out"
+  },
   "nav": {
     "title": "Navigation",
     "tickets": "Tickets",
@@ -11,7 +18,27 @@
     "programs": "Programs",
     "courses": "Courses",
     "exams": "Exams",
-    "records": "Records"
+    "records": "Records",
+    "createUser": "Create user",
+    "createStudent": "Create student",
+    "users": "Users"
+  },
+  "createUser": {
+    "title": "Create user",
+    "titleStudent": "Create student",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "email": "Email",
+    "password": "Password",
+    "role": "Role",
+    "tenant": "Institution",
+    "submit": "Create",
+    "success": "User created.",
+    "back": "Back",
+    "rolePlatformAdmin": "Platform Admin",
+    "roleSchoolAdmin": "School Admin",
+    "roleProfessor": "Professor",
+    "roleStudent": "Student"
   },
   "tenant": {
     "select": "Select tenant",
@@ -75,5 +102,19 @@
     "gpa": "GPA",
     "generatedAt": "Generated at",
     "empty": "No transcripts"
+  },
+  "users": {
+    "title": "Users",
+    "createUser": "Create user",
+    "selectTenant": "Select an institution to view users.",
+    "name": "Name",
+    "suspended": "Suspended",
+    "edit": "Edit",
+    "suspend": "Suspend",
+    "unsuspend": "Unsuspend",
+    "delete": "Delete",
+    "confirmDelete": "Are you sure you want to delete user \"{name}\"?",
+    "empty": "No users.",
+    "loadError": "Failed to load users."
   }
 }

@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import { tenantContext } from './middleware/tenantContext';
 import { errorHandler } from './middleware/errorHandler';
 import { registerHealthRoutes } from './modules/health/health.routes';
+import { registerAuthRoutes } from './modules/auth/auth.routes';
 import { registerTenantRoutes } from './modules/tenant/tenant.routes';
 import { registerStudentRoutes } from './modules/students/students.routes';
 import { registerProgramRoutes } from './modules/programs/programs.routes';
@@ -29,6 +30,7 @@ app.use(tenantContext);
 // API routes (prefix /api)
 const api = express.Router();
 registerHealthRoutes(api);
+registerAuthRoutes(api);
 registerTenantRoutes(api);
 registerStudentRoutes(api);
 registerProgramRoutes(api);

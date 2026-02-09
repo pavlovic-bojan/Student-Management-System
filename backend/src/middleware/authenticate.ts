@@ -26,10 +26,11 @@ export function authenticate(
     req.header('x-test-tenant-id')
   ) {
     req.tenantId = req.header('x-test-tenant-id') ?? undefined;
+    const role = req.header('x-test-role') ?? 'SCHOOL_ADMIN';
     req.user = {
       sub: req.header('x-test-user-id') ?? 'test-user',
       tenantId: req.header('x-test-tenant-id') ?? '',
-      role: 'SCHOOL_ADMIN',
+      role,
     };
     next();
     return;

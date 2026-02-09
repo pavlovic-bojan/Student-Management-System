@@ -1,58 +1,31 @@
 <template>
-  <q-layout view="lHh Lpr lFf" class="app-layout">
-    <q-header elevated class="app-header">
-      <q-toolbar class="app-toolbar">
-        <q-btn
-          flat
-          dense
-          round
-          icon="menu"
-          aria-label="Menu"
-          class="q-mr-sm"
-          @click="ui.toggleLeftDrawer"
-          data-test="button-toggle-drawer"
-        />
-        <q-toolbar-title class="app-toolbar-title">
-          <img
-            src="/logo.png"
-            alt="Student SMS logo"
-            class="app-logo"
-            data-test="app-logo"
-          />
-          <span class="app-title-text">{{ t('appTitle') }}</span>
-        </q-toolbar-title>
-
-        <q-space />
-
-        <q-select
-          v-model="auth.tenantId"
-          :options="tenantsStore.tenants"
-          option-value="id"
-          option-label="name"
-          emit-value
-          map-options
-          :label="t('tenant.select')"
-          dense
-          outlined
-          dark
-          borderless
-          class="app-tenant-select"
-          data-test="tenant-select"
-          :loading="tenantsStore.loading"
-          @update:model-value="onTenantSelect"
-        />
-      </q-toolbar>
-    </q-header>
-
+  <q-layout view="hHh Lpr fFf" class="app-layout">
+    <!-- Sidebar (same pattern as Park: drawer first, header inside page-container) -->
     <q-drawer
       v-model="ui.leftDrawerOpen"
       :width="280"
-      side="left"
+      :breakpoint="999"
       bordered
-      overlay
+      :behavior="$q.screen.width < 999 ? 'mobile' : 'desktop'"
+      :persistent="$q.screen.width < 999"
+      side="left"
       class="app-nav-drawer"
-      data-test="drawer-main"
+      data-test="sidebar"
     >
+      <!-- Close button (only on mobile/tablet) -->
+      <div v-if="$q.screen.width < 999" class="q-pa-md">
+        <q-btn
+          flat
+          round
+          icon="close"
+          aria-label="Zatvori meni"
+          @click="ui.closeLeftDrawer"
+          size="lg"
+          style="min-width: 56px; min-height: 56px; width: 56px; height: 56px;"
+          data-test="button-close-sidebar"
+        />
+      </div>
+
       <q-list padding class="app-nav-list">
         <q-item-label header class="app-nav-header">{{ t('nav.title') }}</q-item-label>
 
@@ -125,8 +98,97 @@
           </q-item-section>
           <q-item-section>{{ t('nav.records') }}</q-item-section>
         </q-item>
+
+        <q-item
+          v-if="auth.user?.role === 'PLATFORM_ADMIN' || auth.user?.role === 'SCHOOL_ADMIN'"
+          clickable
+          v-ripple
+          to="/users"
+          active-class="app-nav-item-active"
+          data-test="nav-users"
+          class="app-nav-item"
+        >
+          <q-item-section avatar>
+            <q-icon name="manage_accounts" />
+          </q-item-section>
+          <q-item-section>{{ t('nav.users') }}</q-item-section>
+        </q-item>
+
+        <q-item
+          v-if="auth.user?.role === 'PLATFORM_ADMIN' || auth.user?.role === 'SCHOOL_ADMIN' || auth.user?.role === 'PROFESSOR'"
+          clickable
+          v-ripple
+          to="/users/create"
+          active-class="app-nav-item-active"
+          data-test="nav-create-user"
+          class="app-nav-item"
+        >
+          <q-item-section avatar>
+            <q-icon name="person_add" />
+          </q-item-section>
+          <q-item-section>{{ auth.user?.role === 'PROFESSOR' ? t('nav.createStudent') : t('nav.createUser') }}</q-item-section>
+        </q-item>
       </q-list>
     </q-drawer>
+
+    <q-page-container>
+      <!-- Header inside page-container (full width of content area, right of sidebar) -->
+      <q-header elevated bordered>
+        <q-toolbar class="app-toolbar">
+          <q-btn
+            flat
+            dense
+            round
+            icon="menu"
+            aria-label="Meni"
+            class="q-mr-sm"
+            @click="ui.toggleLeftDrawer"
+            data-test="button-mobile-menu"
+          />
+          <q-toolbar-title class="app-toolbar-title">
+            <img
+              src="/logo.png"
+              alt="Student SMS logo"
+              class="app-logo"
+              data-test="app-logo"
+            />
+            <span class="app-title-text">{{ t('appTitle') }}</span>
+          </q-toolbar-title>
+
+          <q-space />
+
+          <q-select
+            :model-value="auth.tenantId"
+            :options="tenantOptions"
+            option-value="id"
+            option-label="name"
+            emit-value
+            map-options
+            :label="t('tenant.select')"
+            dense
+            outlined
+            class="app-tenant-select"
+            data-test="tenant-select"
+            :loading="tenantsStore.loading"
+            readonly
+          />
+
+          <q-btn
+            flat
+            round
+            dense
+            icon="logout"
+            :label="t('auth.logout')"
+            @click="handleLogout"
+            data-test="button-logout"
+          />
+
+          <DarkModeToggle />
+        </q-toolbar>
+      </q-header>
+
+      <router-view />
+    </q-page-container>
 
     <!-- Right drawer: Submit report form (BRD: use drawer instead of popup for forms) -->
     <q-drawer
@@ -179,31 +241,48 @@
       </q-scroll-area>
     </q-drawer>
 
-    <q-page-container>
-      <router-view />
-    </q-page-container>
   </q-layout>
 </template>
 
 <script setup lang="ts">
-import { reactive, onMounted } from 'vue';
+import { reactive, computed, onMounted, watch } from 'vue';
+import { useRouter } from 'vue-router';
+import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
 import { useUiStore } from '@/stores/ui';
 import { useAuthStore } from '@/stores/auth';
 import { useTenantsStore } from '@/stores/tenants';
+import DarkModeToggle from '@/components/common/DarkModeToggle.vue';
 
+const router = useRouter();
+const $q = useQuasar();
 const { t } = useI18n();
 const ui = useUiStore();
 const auth = useAuthStore();
 const tenantsStore = useTenantsStore();
 
+const tenantOptions = computed(() =>
+  auth.tenantId
+    ? tenantsStore.tenants.filter((t) => t.id === auth.tenantId)
+    : tenantsStore.tenants
+);
+
+// Auto-open sidebar on desktop (>= 999px), close on mobile (same as Park)
+watch(
+  () => $q.screen.width < 999,
+  (isMobile) => {
+    ui.leftDrawerOpen = !isMobile;
+  },
+  { immediate: true }
+);
+
 onMounted(() => {
   tenantsStore.fetchTenants();
 });
 
-function onTenantSelect(tenantId: string | null) {
-  if (tenantId) auth.setCredentials(tenantId);
-  else auth.clearCredentials();
+async function handleLogout() {
+  await auth.logout();
+  router.push('/auth/login');
 }
 
 const submitForm = reactive({

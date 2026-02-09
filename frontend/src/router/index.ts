@@ -1,47 +1,79 @@
-import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
-import DashboardPage from '@/pages/DashboardPage.vue';
-import StudentsPage from '@/pages/StudentsPage.vue';
-import ProgramsPage from '@/pages/ProgramsPage.vue';
-import CoursesPage from '@/pages/CoursesPage.vue';
-import ExamsPage from '@/pages/ExamsPage.vue';
-import FinancePage from '@/pages/FinancePage.vue';
-import RecordsPage from '@/pages/RecordsPage.vue';
+import { createRouter, createWebHistory } from 'vue-router';
+import type { RouteRecordRaw } from 'vue-router';
+import { requireAuth, guestOnly, requireCanCreateUser, requireAdminOrSchoolAdmin } from './guards';
 
 const routes: RouteRecordRaw[] = [
   {
+    path: '/auth',
+    component: () => import('@/layouts/AuthLayout.vue'),
+    beforeEnter: guestOnly,
+    children: [
+      { path: '', redirect: { name: 'login' } },
+      {
+        path: 'login',
+        name: 'login',
+        component: () => import('@/pages/auth/LoginPage.vue'),
+      },
+      {
+        path: 'forgot-password',
+        name: 'forgot-password',
+        component: () => import('@/pages/auth/ForgotPasswordPage.vue'),
+      },
+    ],
+  },
+  {
     path: '/',
-    name: 'dashboard',
-    component: DashboardPage,
-  },
-  {
-    path: '/students',
-    name: 'students',
-    component: StudentsPage,
-  },
-  {
-    path: '/programs',
-    name: 'programs',
-    component: ProgramsPage,
-  },
-  {
-    path: '/courses',
-    name: 'courses',
-    component: CoursesPage,
-  },
-  {
-    path: '/exams',
-    name: 'exams',
-    component: ExamsPage,
-  },
-  {
-    path: '/finance',
-    name: 'finance',
-    component: FinancePage,
-  },
-  {
-    path: '/records',
-    name: 'records',
-    component: RecordsPage,
+    component: () => import('@/layouts/MainLayout.vue'),
+    beforeEnter: requireAuth,
+    children: [
+      {
+        path: '',
+        name: 'dashboard',
+        component: () => import('@/pages/DashboardPage.vue'),
+      },
+      {
+        path: 'students',
+        name: 'students',
+        component: () => import('@/pages/StudentsPage.vue'),
+      },
+      {
+        path: 'programs',
+        name: 'programs',
+        component: () => import('@/pages/ProgramsPage.vue'),
+      },
+      {
+        path: 'courses',
+        name: 'courses',
+        component: () => import('@/pages/CoursesPage.vue'),
+      },
+      {
+        path: 'exams',
+        name: 'exams',
+        component: () => import('@/pages/ExamsPage.vue'),
+      },
+      {
+        path: 'finance',
+        name: 'finance',
+        component: () => import('@/pages/FinancePage.vue'),
+      },
+      {
+        path: 'records',
+        name: 'records',
+        component: () => import('@/pages/RecordsPage.vue'),
+      },
+      {
+        path: 'users',
+        name: 'users',
+        component: () => import('@/pages/users/UsersPage.vue'),
+        beforeEnter: requireAdminOrSchoolAdmin,
+      },
+      {
+        path: 'users/create',
+        name: 'create-user',
+        component: () => import('@/pages/users/CreateUserPage.vue'),
+        beforeEnter: requireCanCreateUser,
+      },
+    ],
   },
 ];
 
@@ -51,4 +83,3 @@ const router = createRouter({
 });
 
 export default router;
-

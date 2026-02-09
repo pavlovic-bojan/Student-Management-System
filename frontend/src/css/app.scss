@@ -9,15 +9,41 @@ body {
 }
 
 // ---------------------------------------------------------------------------
-// Header & toolbar
+// Header & toolbar – light/dark theme (like Park)
 // ---------------------------------------------------------------------------
-.app-header {
-  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+.q-header {
+  background-color: #fff !important;
+
+  .q-toolbar {
+    background-color: #fff !important;
+    color: #000 !important;
+  }
+
+  * {
+    color: #000 !important;
+  }
+}
+
+body.body--dark {
+  .q-header {
+    background-color: #1d1d1d !important;
+  }
+
+  .q-toolbar {
+    background-color: #1d1d1d !important;
+    color: #fff !important;
+  }
+
+  .q-header,
+  .q-toolbar {
+    * {
+      color: #fff !important;
+    }
+  }
 }
 
 .app-toolbar {
-  min-height: 56px;
+  min-height: 160px;
   padding-left: 8px;
   padding-right: 16px;
 }
@@ -29,8 +55,8 @@ body {
 }
 
 .app-logo {
-  height: 32px;
-  width: auto;
+  height: 140px;
+  width: 160px;
   object-fit: contain;
   display: block;
 }
@@ -38,26 +64,12 @@ body {
 .app-title-text {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #fff;
   letter-spacing: 0.02em;
 }
 
 .app-tenant-select {
   min-width: 220px;
   max-width: 280px;
-
-  :deep(.q-field__control) {
-    &::before {
-      border-color: rgba(255, 255, 255, 0.5) !important;
-    }
-  }
-  :deep(.q-field__label),
-  :deep(.q-field__native) {
-    color: #fff !important;
-  }
-  :deep(.q-icon) {
-    color: rgba(255, 255, 255, 0.8) !important;
-  }
 }
 
 // ---------------------------------------------------------------------------

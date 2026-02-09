@@ -9,6 +9,10 @@ export const useUiStore = defineStore('ui', () => {
     leftDrawerOpen.value = !leftDrawerOpen.value;
   }
 
+  function closeLeftDrawer() {
+    leftDrawerOpen.value = false;
+  }
+
   function openSubmitDrawer() {
     submitDrawerOpen.value = true;
   }
@@ -20,6 +24,7 @@ export const useUiStore = defineStore('ui', () => {
   return {
     leftDrawerOpen,
     toggleLeftDrawer,
+    closeLeftDrawer,
     submitDrawerOpen,
     openSubmitDrawer,
     closeSubmitDrawer,

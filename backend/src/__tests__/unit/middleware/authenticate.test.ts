@@ -86,4 +86,23 @@ describe('authenticate middleware', () => {
     });
     expect(next).toHaveBeenCalled();
   });
+
+  it('should use x-test-role when provided in test mode', () => {
+    process.env.NODE_ENV = 'test';
+    process.env.SKIP_AUTH_FOR_TESTS = '1';
+    const reqTest = {
+      ...req,
+      header: (name: string) =>
+        name === 'x-test-tenant-id'
+          ? 'test-tenant-id'
+          : name === 'x-test-user-id'
+            ? 'test-user-id'
+            : name === 'x-test-role'
+              ? 'PLATFORM_ADMIN'
+              : undefined,
+    };
+    authenticate(reqTest as any, res as any, next);
+    expect((reqTest as any).user?.role).toBe('PLATFORM_ADMIN');
+    expect(next).toHaveBeenCalled();
+  });
 });

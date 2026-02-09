@@ -1,6 +1,8 @@
+import bcrypt from 'bcrypt';
 import { PrismaClient, StudentStatus, UserRole, ExamStatus } from '@prisma/client';
 
 const prisma = new PrismaClient();
+const SALT_ROUNDS = 10;
 
 const UNIVERSITIES = [
   { name: 'Univerzitet u Beogradu', code: 'BG' },
@@ -108,16 +110,31 @@ async function main() {
   const tenants = await prisma.tenant.findMany({ orderBy: { createdAt: 'asc' } });
   console.log(`Created ${tenants.length} tenants.`);
 
+  // Platform Admin (one global admin; assigned to first tenant for DB constraint)
+  const platformAdminPasswordHash = await bcrypt.hash('seed-platform-admin-change-me', SALT_ROUNDS);
+  await prisma.user.create({
+    data: {
+      email: 'platform-admin@sms.edu',
+      password: platformAdminPasswordHash,
+      firstName: 'Platform',
+      lastName: 'Admin',
+      role: UserRole.PLATFORM_ADMIN,
+      tenantId: tenants[0].id,
+    },
+  });
+  console.log('Created Platform Admin: platform-admin@sms.edu');
+
   for (let tIdx = 0; tIdx < tenants.length; tIdx++) {
     const tenant = tenants[tIdx];
     const prefix = tenant.code.toLowerCase();
     console.log(`[${tIdx + 1}/${tenants.length}] Seeding tenant: ${tenant.name}`);
 
     const adminEmail = `admin@${prefix}.edu`;
+    const adminPasswordHash = await bcrypt.hash('seed-admin-change-me', SALT_ROUNDS);
     await prisma.user.create({
       data: {
         email: adminEmail,
-        password: 'seed-admin-change-me',
+        password: adminPasswordHash,
         firstName: 'Admin',
         lastName: tenant.name.split(' ')[0],
         role: UserRole.SCHOOL_ADMIN,
@@ -126,11 +143,12 @@ async function main() {
     });
 
     const professors: { id: string }[] = [];
+    const profPasswordHash = await bcrypt.hash('seed-prof-change-me', SALT_ROUNDS);
     for (let i = 0; i < 8; i++) {
       const p = await prisma.user.create({
         data: {
           email: `prof${i + 1}@${prefix}.edu`,
-          password: 'seed-prof-change-me',
+          password: profPasswordHash,
           firstName: pick(FIRST_NAMES),
           lastName: pick(LAST_NAMES),
           role: UserRole.PROFESSOR,
