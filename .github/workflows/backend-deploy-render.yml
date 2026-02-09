@@ -67,20 +67,20 @@ jobs:
           curl -fsS -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
           echo "✅ Render deploy triggered!"
 
-      # 8. Wait for deployment
-      - name: ⏳ Wait for deployment (30 seconds)
-        run: sleep 30
+      # 8. Wait for Render to start deploying (cold start can be 1–2 min on free tier)
+      - name: ⏳ Wait for deployment (90 seconds)
+        run: sleep 90
 
-      # 9. Health check
+      # 9. Health check (retry up to 8 times, 15s apart; curl timeout 10s per attempt)
       - name: 🏥 Health check
         run: |
-          for i in 1 2 3 4 5; do
-            if curl -fsS "${{ secrets.BACKEND_URL }}/api/health"; then
+          for i in 1 2 3 4 5 6 7 8; do
+            if curl -fsS --connect-timeout 10 --max-time 15 "${{ secrets.BACKEND_URL }}/api/health"; then
               echo "✅ Backend is healthy!"
               exit 0
             fi
-            echo "Waiting for backend... (attempt $i/5)"
-            sleep 10
+            echo "Waiting for backend... (attempt $i/8)"
+            sleep 15
           done
           echo "❌ Health check failed!"
           exit 1

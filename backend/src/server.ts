@@ -2,6 +2,10 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import path from 'path';
+import fs from 'fs';
+import swaggerUi from 'swagger-ui-express';
+import YAML from 'yaml';
 
 import { tenantContext } from './middleware/tenantContext';
 import { errorHandler } from './middleware/errorHandler';
@@ -26,6 +30,13 @@ app.use(
 app.use(express.json());
 app.use(morgan('dev'));
 app.use(tenantContext);
+
+// Swagger UI (OpenAPI spec from backend/openapi.yaml)
+const openApiPath = path.join(__dirname, '..', 'openapi.yaml');
+if (fs.existsSync(openApiPath)) {
+  const spec = YAML.parse(fs.readFileSync(openApiPath, 'utf8'));
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(spec));
+}
 
 // API routes (prefix /api)
 const api = express.Router();
