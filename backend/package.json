@@ -5,9 +5,9 @@
   "main": "dist/server.js",
   "type": "commonjs",
   "scripts": {
-    "dev": "tsx src/server.ts",
+    "dev": "tsx src/index.ts",
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/server.js",
+    "start": "node dist/index.js",
     "test": "npx vitest run",
     "test:unit": "npx vitest run --testPathPattern=unit",
     "test:integration": "npx vitest run --testPathPattern=integration",

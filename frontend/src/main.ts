@@ -7,6 +7,7 @@ import App from './App.vue';
 
 import 'quasar/src/css/index.sass';
 import './css/app.scss';
+import './css/tailwind.css';
 
 const app = createApp(App);
 

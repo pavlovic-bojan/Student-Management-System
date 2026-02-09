@@ -1,11 +1,123 @@
-@import 'quasar/src/css/variables.sass';
+@import './quasar-variables.sass';
 
+// ---------------------------------------------------------------------------
+// Base
+// ---------------------------------------------------------------------------
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
     Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
-.dashboard-page {
-  background: #f5f7fb;
+// ---------------------------------------------------------------------------
+// Header & toolbar
+// ---------------------------------------------------------------------------
+.app-header {
+  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
+.app-toolbar {
+  min-height: 56px;
+  padding-left: 8px;
+  padding-right: 16px;
+}
+
+.app-toolbar-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-logo {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.app-title-text {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 0.02em;
+}
+
+.app-tenant-select {
+  min-width: 220px;
+  max-width: 280px;
+
+  :deep(.q-field__control) {
+    &::before {
+      border-color: rgba(255, 255, 255, 0.5) !important;
+    }
+  }
+  :deep(.q-field__label),
+  :deep(.q-field__native) {
+    color: #fff !important;
+  }
+  :deep(.q-icon) {
+    color: rgba(255, 255, 255, 0.8) !important;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Left nav drawer (hamburger menu)
+// ---------------------------------------------------------------------------
+.app-nav-drawer {
+  .q-drawer__content {
+    width: 280px;
+    min-width: 280px;
+  }
+}
+
+.app-nav-list {
+  padding-top: 8px;
+}
+
+.app-nav-header {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #666;
+  padding: 8px 16px;
+}
+
+.app-nav-item {
+  min-height: 48px;
+
+  .q-item__section--avatar {
+    min-width: 40px;
+  }
+  .q-item__section--main {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.app-nav-item-active {
+  background-color: rgba(25, 118, 210, 0.1);
+  color: #1976d2;
+}
+
+// ---------------------------------------------------------------------------
+// Dashboard page
+// ---------------------------------------------------------------------------
+.dashboard-page {
+  background: #f0f2f5;
+  min-height: calc(100vh - 56px);
+}
+
+.dashboard-page .status-chip {
+  min-width: 120px;
+}
+
+.dashboard-page .camera-placeholder {
+  border: 2px dashed #c0c4ce;
+  border-radius: 12px;
+  background: #fafafa;
+  min-height: 180px;
+}

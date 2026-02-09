@@ -1,23 +1,25 @@
 <template>
-  <q-layout view="lHh Lpr lFf">
-    <q-header elevated>
-      <q-toolbar>
+  <q-layout view="lHh Lpr lFf" class="app-layout">
+    <q-header elevated class="app-header">
+      <q-toolbar class="app-toolbar">
         <q-btn
           flat
           dense
           round
           icon="menu"
+          aria-label="Menu"
+          class="q-mr-sm"
           @click="ui.toggleLeftDrawer"
           data-test="button-toggle-drawer"
         />
-        <q-toolbar-title class="row items-center q-gutter-sm">
+        <q-toolbar-title class="app-toolbar-title">
           <img
             src="/logo.png"
             alt="Student SMS logo"
             class="app-logo"
             data-test="app-logo"
           />
-          <span>{{ t('appTitle') }}</span>
+          <span class="app-title-text">{{ t('appTitle') }}</span>
         </q-toolbar-title>
 
         <q-space />
@@ -32,8 +34,9 @@
           :label="t('tenant.select')"
           dense
           outlined
-          class="tenant-select"
-          style="min-width: 200px"
+          dark
+          borderless
+          class="app-tenant-select"
           data-test="tenant-select"
           :loading="tenantsStore.loading"
           @update:model-value="onTenantSelect"
@@ -43,78 +46,80 @@
 
     <q-drawer
       v-model="ui.leftDrawerOpen"
-      show-if-above
+      :width="280"
       side="left"
       bordered
+      overlay
+      class="app-nav-drawer"
       data-test="drawer-main"
     >
-      <q-list padding>
-        <q-item-label header>{{ t('nav.title') }}</q-item-label>
+      <q-list padding class="app-nav-list">
+        <q-item-label header class="app-nav-header">{{ t('nav.title') }}</q-item-label>
 
-        <q-item clickable v-ripple to="/" data-test="nav-tickets">
+        <q-item clickable v-ripple to="/" active-class="app-nav-item-active" data-test="nav-tickets" class="app-nav-item">
           <q-item-section avatar>
             <q-icon name="assignment" />
           </q-item-section>
           <q-item-section>{{ t('nav.tickets') }}</q-item-section>
         </q-item>
 
-        <q-item clickable v-ripple data-test="nav-notifications">
+        <q-item clickable v-ripple data-test="nav-notifications" class="app-nav-item">
           <q-item-section avatar>
             <q-icon name="notifications" />
           </q-item-section>
           <q-item-section>{{ t('nav.notifications') }}</q-item-section>
         </q-item>
 
-        <q-item clickable v-ripple data-test="nav-documents">
+        <q-item clickable v-ripple data-test="nav-documents" class="app-nav-item">
           <q-item-section avatar>
             <q-icon name="description" />
           </q-item-section>
           <q-item-section>{{ t('nav.documents') }}</q-item-section>
         </q-item>
 
-        <q-item clickable v-ripple to="/finance" data-test="nav-finance">
+        <q-item clickable v-ripple to="/finance" active-class="app-nav-item-active" data-test="nav-finance" class="app-nav-item">
           <q-item-section avatar>
             <q-icon name="payments" />
           </q-item-section>
           <q-item-section>{{ t('nav.finance') }}</q-item-section>
         </q-item>
 
-        <q-item clickable v-ripple data-test="nav-calendar">
+        <q-item clickable v-ripple data-test="nav-calendar" class="app-nav-item">
           <q-item-section avatar>
             <q-icon name="event" />
           </q-item-section>
           <q-item-section>{{ t('nav.calendar') }}</q-item-section>
         </q-item>
 
-        <q-item clickable v-ripple to="/students" data-test="nav-students">
+        <q-item clickable v-ripple to="/students" active-class="app-nav-item-active" data-test="nav-students" class="app-nav-item">
           <q-item-section avatar>
             <q-icon name="people" />
           </q-item-section>
           <q-item-section>{{ t('nav.students') }}</q-item-section>
         </q-item>
 
-        <q-item clickable v-ripple to="/programs" data-test="nav-programs">
+        <q-item clickable v-ripple to="/programs" active-class="app-nav-item-active" data-test="nav-programs" class="app-nav-item">
           <q-item-section avatar>
             <q-icon name="school" />
           </q-item-section>
           <q-item-section>{{ t('nav.programs') }}</q-item-section>
         </q-item>
 
-        <q-item clickable v-ripple to="/courses" data-test="nav-courses">
+        <q-item clickable v-ripple to="/courses" active-class="app-nav-item-active" data-test="nav-courses" class="app-nav-item">
           <q-item-section avatar>
             <q-icon name="menu_book" />
           </q-item-section>
           <q-item-section>{{ t('nav.courses') }}</q-item-section>
         </q-item>
 
-        <q-item clickable v-ripple to="/exams" data-test="nav-exams">
+        <q-item clickable v-ripple to="/exams" active-class="app-nav-item-active" data-test="nav-exams" class="app-nav-item">
           <q-item-section avatar>
             <q-icon name="quiz" />
           </q-item-section>
           <q-item-section>{{ t('nav.exams') }}</q-item-section>
         </q-item>
 
-        <q-item clickable v-ripple to="/records" data-test="nav-records">
+        <q-item clickable v-ripple to="/records" active-class="app-nav-item-active" data-test="nav-records" class="app-nav-item">
           <q-item-section avatar>
             <q-icon name="folder" />
           </q-item-section>
@@ -214,8 +219,6 @@ function onSubmitForm() {
 }
 </script>
 
-<style scoped>
-.app-logo {
-  height: 28px;
-}
+<style scoped lang="scss">
+/* Layout-specific overrides only; main styles in app.scss */
 </style>
