@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { RecordsService } from '../../../../modules/records/records.service.refactored';
-import { IRecordsRepository } from '../../../../modules/records/records.repository.interface';
+import { RecordsService } from '../../../modules/records/records.service.refactored';
+import { IRecordsRepository } from '../../../modules/records/records.repository.interface';
 
 describe('RecordsService', () => {
   let service: RecordsService;

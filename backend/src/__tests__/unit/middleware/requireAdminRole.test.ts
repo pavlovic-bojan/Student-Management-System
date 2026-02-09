@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { requireAdminOrSchoolAdmin, requireCanCreateUser } from '../../../../middleware/requireAdminRole';
+import { requireAdminOrSchoolAdmin, requireCanCreateUser } from '../../../middleware/requireAdminRole';
 import { mockRequest, mockResponse } from '../../helpers/testHelpers';
 
 describe('requireAdminOrSchoolAdmin', () => {

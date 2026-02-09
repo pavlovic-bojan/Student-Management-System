@@ -1,7 +1,7 @@
 import { describe, it, expect, afterAll } from 'vitest';
 import request from 'supertest';
-import { app } from '../../../server';
-import { prisma } from '../../../prisma/client';
+import { app } from '../../server';
+import { prisma } from '../../prisma/client';
 
 describe('Tenants API (integration)', () => {
   const code = `TEST-TENANT-${Date.now()}`;

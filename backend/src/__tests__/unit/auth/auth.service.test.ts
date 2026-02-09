@@ -145,7 +145,7 @@ describe('auth.service', () => {
         updatedAt: new Date(),
         userTenants: [],
       } as any);
-      vi.mocked(bcrypt.default.compare).mockResolvedValue(false as never);
+      vi.mocked(bcrypt.compare).mockResolvedValue(false as never);
 
       await expect(
         authService.login({ email: 'u@test.com', password: 'wrong' })
@@ -166,7 +166,7 @@ describe('auth.service', () => {
         updatedAt: new Date(),
         userTenants: [],
       } as any);
-      vi.mocked(bcrypt.default.compare).mockResolvedValue(true as never);
+      vi.mocked(bcrypt.compare).mockResolvedValue(true as never);
 
       await expect(
         authService.login({ email: 'u@test.com', password: 'pass' })
@@ -187,7 +187,7 @@ describe('auth.service', () => {
         updatedAt: new Date(),
         userTenants: [],
       } as any);
-      vi.mocked(bcrypt.default.compare).mockResolvedValue(true as never);
+      vi.mocked(bcrypt.compare).mockResolvedValue(true as never);
 
       const result = await authService.login({ email: 'u@test.com', password: 'pass' });
       expect(result.user).toMatchObject({ id: 'u1', email: 'u@test.com', role: 'STUDENT', tenantId: 't1' });

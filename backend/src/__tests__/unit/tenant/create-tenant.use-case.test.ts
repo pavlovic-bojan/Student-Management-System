@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { CreateTenantUseCase } from '../../../../modules/tenant/use-cases/create-tenant.use-case';
-import { ITenantRepository } from '../../../../modules/tenant/tenant.repository.interface';
-import { ApiError } from '../../../../middleware/errorHandler';
+import { CreateTenantUseCase } from '../../../modules/tenant/use-cases/create-tenant.use-case';
+import { ITenantRepository } from '../../../modules/tenant/tenant.repository.interface';
+import { ApiError } from '../../../middleware/errorHandler';
 
 describe('CreateTenantUseCase', () => {
   let useCase: CreateTenantUseCase;

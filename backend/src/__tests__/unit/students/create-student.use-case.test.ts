@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { CreateStudentUseCase } from '../../../../modules/students/use-cases/create-student.use-case';
-import { IStudentsRepository } from '../../../../modules/students/students.repository.interface';
-import { ApiError } from '../../../../middleware/errorHandler';
+import { CreateStudentUseCase } from '../../../modules/students/use-cases/create-student.use-case';
+import { IStudentsRepository } from '../../../modules/students/students.repository.interface';
+import { ApiError } from '../../../middleware/errorHandler';
 
 describe('CreateStudentUseCase', () => {
   let useCase: CreateStudentUseCase;

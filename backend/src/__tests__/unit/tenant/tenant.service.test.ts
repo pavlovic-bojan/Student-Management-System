@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { TenantService } from '../../../../modules/tenant/tenant.service.refactored';
-import { ITenantRepository } from '../../../../modules/tenant/tenant.repository.interface';
+import { TenantService } from '../../../modules/tenant/tenant.service.refactored';
+import { ITenantRepository } from '../../../modules/tenant/tenant.repository.interface';
 
 describe('TenantService', () => {
   let service: TenantService;

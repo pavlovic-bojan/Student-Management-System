@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { tenantContext } from '../../../../middleware/tenantContext';
+import { tenantContext } from '../../../middleware/tenantContext';
 import { mockRequest, mockResponse } from '../../helpers/testHelpers';
 
 describe('tenantContext middleware', () => {

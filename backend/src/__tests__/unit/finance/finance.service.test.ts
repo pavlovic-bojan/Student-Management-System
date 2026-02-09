@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { FinanceService } from '../../../../modules/finance/finance.service.refactored';
-import { IFinanceRepository } from '../../../../modules/finance/finance.repository.interface';
+import { FinanceService } from '../../../modules/finance/finance.service.refactored';
+import { IFinanceRepository } from '../../../modules/finance/finance.repository.interface';
 
 describe('FinanceService', () => {
   let service: FinanceService;

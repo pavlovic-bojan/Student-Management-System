@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import jwt from 'jsonwebtoken';
-import { authenticate } from '../../../../middleware/authenticate';
+import { authenticate } from '../../../middleware/authenticate';
 import { mockRequest, mockResponse } from '../../helpers/testHelpers';
 
-vi.mock('../../../../config/env', () => ({
+vi.mock('../../../config/env', () => ({
   env: { jwtSecret: 'test-jwt-secret-min-32-chars-long' },
 }));
 

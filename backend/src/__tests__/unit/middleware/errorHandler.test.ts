@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { errorHandler, ApiError } from '../../../../middleware/errorHandler';
+import { errorHandler, ApiError } from '../../../middleware/errorHandler';
 import { mockRequest, mockResponse } from '../../helpers/testHelpers';
 
-vi.mock('../../../../utils/logger', () => ({
+vi.mock('../../../utils/logger', () => ({
   logger: { error: vi.fn() },
 }));
 
