@@ -1,0 +1,95 @@
+# Backend Deploy to Render
+name: 🚀 Backend Deploy to Render
+
+# Trigger on push to main branch (backend changes only)
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-deploy-render.yml'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  test-and-migrate:
+    name: Test & Migrate Database
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout code
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Setup Node.js
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 3. Install dependencies
+      - name: 📦 Install dependencies
+        run: |
+          cd backend
+          npm install
+
+      # 4. Generate Prisma Client
+      - name: 🔄 Generate Prisma Client
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          cd backend
+          npm run prisma:generate
+
+      # 5. Run backend tests
+      - name: 🧪 Run backend tests
+        env:
+          NODE_ENV: test
+          SKIP_AUTH_FOR_TESTS: '1'
+          DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+        run: |
+          cd backend
+          npm test
+
+      # 6. Run Prisma migrations on PRODUCTION database
+      - name: 🔄 Run database migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          cd backend
+          npx prisma migrate deploy
+          echo "✅ Migrations applied successfully!"
+
+      # 7. Trigger Render Deploy via Deploy Hook
+      - name: 🚀 Trigger Render Deploy
+        run: |
+          curl -fsS -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+          echo "✅ Render deploy triggered!"
+
+      # 8. Wait for deployment
+      - name: ⏳ Wait for deployment (30 seconds)
+        run: sleep 30
+
+      # 9. Health check
+      - name: 🏥 Health check
+        run: |
+          for i in 1 2 3 4 5; do
+            if curl -fsS "${{ secrets.BACKEND_URL }}/api/health"; then
+              echo "✅ Backend is healthy!"
+              exit 0
+            fi
+            echo "Waiting for backend... (attempt $i/5)"
+            sleep 10
+          done
+          echo "❌ Health check failed!"
+          exit 1
+
+      # 10. Notify on success
+      - name: ✅ Deployment successful
+        if: success()
+        run: |
+          echo "✅ Backend deployed successfully!"
+          echo "🔗 URL: ${{ secrets.BACKEND_URL }}"
+          echo "📋 API base: ${{ secrets.BACKEND_URL }}/api"
+          echo "📄 OpenAPI spec: see backend/openapi.yaml in repo"
