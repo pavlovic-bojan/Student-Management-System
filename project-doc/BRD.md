@@ -1,0 +1,452 @@
+# Business Requirements Document (BRD)
+
+**Multi-Tenant Student Management System (SMS) - Enterprise SaaS**  
+**Architecture with UI Wireframes and Detailed Epics**  
+**Date: February 4, 2026**
+
+---
+
+## 1. Executive Summary
+
+The Student Management System (SMS) is a multi-tenant, enterprise-grade SaaS platform for managing administrative and academic student data across universities, colleges, and schools.
+
+The platform is:
+- **Microservices-ready and cloud-ready**, with independent scaling per domain.
+- Built around a **Vue 3 + Quasar** frontend with drawer-based UX.
+- Designed for **large, distributed teams** with clear service boundaries, observability, and CI/CD.
+
+Key goals:
+- Secure multi-tenancy and tenant isolation.
+- Robust CRUD operations for core domains (students, programs, courses, exams, finance, records).
+- High-quality UX with Quasar components and responsive design.
+- Strong testing strategy (unit, integration, E2E with Playwright, performance with k6).
+
+Success metrics:
+- **Availability**: 99.9% uptime.
+- **Performance**: \<200ms P95 API response time.
+- **Quality**: E2E test coverage \>90% for critical flows.
+
+---
+
+## 2. Purpose and Objectives
+
+The SMS exists to centralize and streamline academic and administrative processes for multiple educational institutions in a single SaaS platform.
+
+**Objectives:**
+- Provide a **multi-tenant** platform where each institution (tenant) manages its own data securely.
+- Support end-to-end workflows: student lifecycle, programs, courses, exams, finance, and records.
+- Expose **well-documented REST APIs** for integration with external systems.
+- Offer an **intuitive web UI** (Vue 3 + Quasar) with consistent drawer-based patterns for navigation and CRUD.
+- Enable **independent development and deployment** of each functional domain (microservices).
+
+---
+
+## 3. Stakeholders
+
+| Role           | Responsibilities                                   |
+|----------------|----------------------------------------------------|
+| Platform Admin | Tenant management, system oversight                |
+| School Admin   | CRUD for students, programs, courses, finance      |
+| Professor      | Exam grading, course assignments, attendance       |
+| Student        | Enrollment, exam registration, transcript access   |
+| QA Lead        | Test strategy, Playwright and k6 suites            |
+
+---
+
+## 4. Scope
+
+**In Scope:**
+- Multi-tenant backend microservices:
+  - Auth, Students, Programs, Courses, Exams, Finance, Records
+- API Gateway with:
+  - Auth, routing, logging, tenant propagation, rate limiting
+- Frontend:
+  - Vue 3 + Quasar SPA with drawer-based navigation and CRUD
+- Monorepo structure for apps and shared packages
+- Testing:
+  - Unit, integration, DB tests
+  - E2E tests with Playwright
+  - Performance/load tests with k6
+- Observability:
+  - Centralized logging, metrics, dashboards
+
+**Out of Scope:**
+- HR/payroll modules
+- Native mobile apps
+- On-premise installations (initially cloud-first)
+
+---
+
+## 5. Technology Stack & Architecture Constraints
+
+### Frontend
+- **Vue 3 + Quasar** (TypeScript)
+- Component-based architecture
+- **Quasar components used throughout**:
+  - Tables, Cards, Forms, Drawers, Buttons, Alerts, Banners
+- **Drawers instead of popups/modals** for navigation and CRUD forms
+- State management: Pinia (or Vuex if required)
+- Full i18n-ready design
+
+### Backend Microservices
+- **Node.js + Express** per service
+- **TypeScript** everywhere
+- **Prisma ORM** with PostgreSQL:
+  - Per-service schema or DB (depending on deployment model)
+- RESTful APIs
+- Optional event-driven communication (RabbitMQ / Kafka) between services
+
+### Architecture Style
+- Microservices-based backend with API Gateway
+- Domain-driven design:
+  - Each bounded context = independent service (Auth, Students, Programs, etc.)
+- Multi-tenant awareness at all layers (middleware, services, DB)
+- Monorepo structure for development convenience
+- Event-driven architecture for decoupled communication and eventual consistency
+
+### Observability & Production Readiness
+- Centralized logging (e.g., ELK stack)
+- Metrics collection and monitoring (Prometheus + Grafana)
+- Centralized error reporting
+- CI/CD pipelines per service with:
+  - Blue/green or rolling deployments
+  - Feature flag support
+
+### Testing
+- Unit, integration, and database tests per service
+- E2E tests with **Playwright**
+- Performance and load tests with **k6**
+
+---
+
+## 6. Monorepo Structure
+
+High-level example monorepo layout:
+
+```text
+/apps
+  /api-gateway       → Aggregates microservices, handles auth, routing, tenant context, logging
+  /auth-service      → Authentication, tenant management, JWT issuance, RBAC
+  /students-service  → Student CRUD, status, history
+  /programs-service  → Academic programs and course metadata
+  /courses-service   → Course offerings, enrollments
+  /exams-service     → Exam periods, registrations, grading
+  /finance-service   → Tuition, payments, balances
+  /records-service   → Transcripts, certificates
+  /frontend          → Vue 3 + Quasar SPA, wireframes, drawers for forms and menus
+
+/packages
+  /shared-types      → Shared TypeScript types (DTOs, enums)
+  /shared-utils      → Common utilities, validators, middleware
+  /eslint-config     → Shared lint rules
+  /tsconfig          → Shared TS config
+  /e2e-tests         → Playwright end-to-end test suite
+```
+
+Concrete structure in the repository can differ (e.g., `backend`, `frontend`, `tests`), but this BRD assumes equivalent responsibilities per area.
+
+---
+
+## 7. Multi-Tenancy Model
+
+- Tenant-aware middleware in API Gateway propagates `tenant_id` to all microservices.
+- Each microservice enforces tenant scoping in all database queries.
+- Tenant isolation models:
+  - Schema-per-tenant, or
+  - Shared schema with `tenant_id` column + row-level filtering.
+- Platform Admin manages tenants:
+  - Create, update, deactivate, manage metadata (name, address, billing).
+- All audit and logs include `tenant_id` for traceability.
+
+---
+
+## 8. Frontend UI / Wireframes Requirements
+
+- **Navigation:**
+  - Drawer component for main menu and **tenant switcher**.
+- **Forms:**
+  - Use drawers instead of popups/modals for CRUD forms:
+    - Student
+    - Program
+    - Course
+    - Exam
+    - Payment / Invoice
+- **Tables & Lists:**
+  - Quasar `QTable` with:
+    - Sorting
+    - Filtering
+    - Pagination
+    - Server-side queries where needed
+- **Cards:**
+  - For summary dashboards (student overview, academic status, financial summary).
+- **Alerts/Notifications:**
+  - Quasar `QBanner`, `QNotify`, and alert components.
+- **Responsive Design:**
+  - Drawer collapses on small screens
+  - Tables and forms adapt to mobile
+- **Wireframes:**
+  - Cover Admin, Professor, and Student areas, all built using Quasar components.
+- **UX Pattern:**
+  - Use **drawers consistently** for all CRUD actions instead of popups.
+
+---
+
+## 9. Microservices Domain Breakdown
+
+- **API Gateway**
+  - Aggregates all services
+  - Handles tenant context, authentication, logging, rate limiting
+- **Auth Service**
+  - User management, tenant management
+  - JWT issuance, refresh tokens
+  - RBAC (roles & permissions)
+  - Audit logging for logins and admin actions
+- **Students Service**
+  - Student CRUD
+  - Status tracking (active, graduated, dropped, etc.)
+  - History (status changes, important events)
+  - Tenant-scoped searches
+- **Programs Service**
+  - Academic program CRUD
+  - Associations between programs and courses
+  - Versioning of program definitions
+- **Courses Service**
+  - Courses and course offerings
+  - Enrollment endpoints
+  - Professor assignment
+- **Exams Service**
+  - Exam periods and terms
+  - Registrations
+  - Grading logic
+  - GPA calculation
+  - Notifications on grade changes
+- **Finance Service**
+  - Tuition definitions
+  - Payments and invoices
+  - Balance and overdue calculations
+  - Notifications for overdue balances
+- **Records Service**
+  - Transcripts and certificates
+  - Passed exams and academic history
+
+---
+
+## 10. Security Requirements
+
+- JWT authentication with tenant context embedded.
+- Role-based access control per service.
+- Tenant isolation enforced at:
+  - API Gateway
+  - Service layer
+  - Database queries
+- Secure password storage (e.g., bcrypt).
+- Audit logging for all critical operations (create/update/delete, logins, tenant changes).
+- Rate limiting and optional WAF protections at the edge/API gateway.
+
+---
+
+## 11. Audit and Logging
+
+- Each service logs critical actions with:
+  - `tenant_id`
+  - `user_id`
+  - timestamp
+  - action
+  - affected entity/ID
+- API Gateway aggregates logs for:
+  - centralized viewing
+  - anomaly detection
+- Observability:
+  - Metrics with Prometheus
+  - Dashboards with Grafana
+  - Centralized logs via ELK (or similar)
+
+---
+
+## 12. Non-Functional Requirements (NFRs)
+
+| Category    | Requirement            | Metric                    |
+|------------|------------------------|---------------------------|
+| Performance| API response time      | \<200ms P95               |
+| Scalability| Horizontal scaling     | Auto-scale to 1000 req/s |
+| Availability| Uptime                | 99.9% SLA                 |
+| Security   | Data isolation         | Tenant-scoped queries, JWT/RBAC |
+| Usability  | Accessibility          | WCAG 2.1 AA, responsive drawers |
+| Compliance | Data privacy           | GDPR-ready audit logs     |
+
+---
+
+## 13. Testing Strategy
+
+- **Backend Microservices**
+  - Unit tests for business logic
+  - Integration tests for REST endpoints (with DB)
+  - DB-backed API tests
+- **Frontend**
+  - Unit tests for composables and utilities
+  - Component tests for Vue + Quasar components
+- **E2E**
+  - Playwright test suite:
+    - Multi-service flows across tenants
+    - Page Object Model pattern
+- **Performance**
+  - k6 load and stress tests for critical endpoints
+- **CI/CD**
+  - Automated test runs
+  - Linting and type-checking
+  - Blocking of deployments on failing tests
+
+---
+
+## 14. Assumptions, Risks, and Dependencies
+
+### Assumptions
+- PostgreSQL supports tenant volume (\>10k students per tenant).
+- Cloud infrastructure (e.g., Render/NeonDB or similar) is available.
+- Third-party payment provider (e.g., Stripe) can be integrated later.
+
+### Risks and Mitigations
+
+| Risk                 | Likelihood | Mitigation                                   |
+|----------------------|-----------|----------------------------------------------|
+| Tenant data leakage  | Medium    | Mandatory tenant filters + QA audits         |
+| Scaling bottlenecks  | High      | k6 performance testing + auto-scaling        |
+| Event integration lag| Medium    | Fallback REST APIs + phased rollout strategy |
+
+### Dependencies
+- Cloud hosting for microservices and DB.
+- Docker for packaging and environment parity.
+- Monitoring and logging stack (Prometheus/Grafana/ELK).
+
+---
+
+## 15. Product Backlog (Epics & Tasks) with Detailed Functional Descriptions
+
+### EPIC 1 – Microservices Architecture & API Gateway
+- **Goal:** Establish microservices-ready architecture with secure, tenant-aware API Gateway.
+- **Implementation Order / Todo:**
+  1. Define service boundaries per domain.
+  2. Setup monorepo structure with Docker configuration for each service.
+  3. Implement API Gateway routing.
+  4. Add tenant-aware middleware to propagate `tenant_id`.
+  5. Implement JWT validation and RBAC in gateway.
+  6. Add request validation (Zod/Joi schemas).
+  7. Implement logging and metrics collection.
+  8. (Optional) Integrate event-driven communication (RabbitMQ/Kafka).
+- **Use Cases:** Request routing, tenant context propagation, auth validation, logging, error handling.
+
+### EPIC 2 – Auth Service
+- **Goal:** Secure authentication, tenant management, and RBAC.
+- **Implementation Order / Todo:**
+  1. Create User and Tenant database models.
+  2. Implement JWT authentication.
+  3. User registration/login flows.
+  4. Tenant CRUD endpoints.
+  5. Implement RBAC middleware.
+  6. Audit logging.
+  7. Unit and integration tests.
+- **Use Cases:** Tenant admin creates users, user login, unauthorized access handling.
+
+### EPIC 3 – Students Service
+- **Goal:** Manage student records per tenant.
+- **Implementation Order / Todo:**
+  1. Define Student model.
+  2. CRUD endpoints.
+  3. Status tracking and history.
+  4. Search/filter endpoints per tenant.
+  5. Audit logging.
+  6. Unit and integration tests.
+- **Use Cases:** Create/update student, tenant-scoped fetch, status changes.
+
+### EPIC 4 – Programs Service
+- **Goal:** Manage academic programs per tenant.
+- **Implementation Order / Todo:**
+  1. Define Program model.
+  2. CRUD endpoints.
+  3. Program-course associations.
+  4. Versioning for program changes.
+  5. Unit and integration tests.
+- **Use Cases:** Admin manages programs, associate courses, view version history.
+
+### EPIC 5 – Courses Service
+- **Goal:** Manage courses and enrollments.
+- **Implementation Order / Todo:**
+  1. Define Course and CourseOffering models.
+  2. CRUD endpoints.
+  3. Assign professors.
+  4. Implement enrollment endpoints.
+  5. Unit and integration tests.
+- **Use Cases:** Enroll students, assign professors, list courses per tenant.
+
+### EPIC 6 – Exams Service
+- **Goal:** Manage exams, registrations, and grading.
+- **Implementation Order / Todo:**
+  1. Define ExamPeriod and ExamTerm models.
+  2. CRUD endpoints and registrations.
+  3. Grading logic and GPA calculation.
+  4. Event-driven notifications on grade changes.
+  5. Unit and integration tests.
+- **Use Cases:** Exam registration, grade updates, transcript notifications.
+
+### EPIC 7 – Finance Service
+- **Goal:** Track tuition, payments, balances.
+- **Implementation Order / Todo:**
+  1. Define Tuition and Payment models.
+  2. CRUD endpoints.
+  3. Balance calculations.
+  4. Event-driven notifications for overdue payments.
+  5. Unit and integration tests.
+- **Use Cases:** Payment recording, balance checking, overdue alerts.
+
+### EPIC 8 – Records Service
+- **Goal:** Generate transcripts, certificates, passed exams reports.
+- **Implementation Order / Todo:**
+  1. Define Transcript and Certificate models.
+  2. Implement endpoints.
+  3. Unit and integration tests.
+- **Use Cases:** Generate transcripts, issue certificates, retrieve exam results.
+
+### EPIC 9 – Frontend with Wireframes
+- **Goal:** Implement Quasar frontend with drawers for CRUD forms.
+- **Implementation Order / Todo:**
+  1. Setup Quasar project in `/frontend`.
+  2. Implement drawer-based navigation menu.
+  3. Implement CRUD forms as drawers for core domains.
+  4. Implement dashboard cards and tables.
+  5. Implement responsive design (desktop/tablet/mobile).
+  6. Unit and component tests.
+- **Use Cases:** Admin, Professor, Student UI interactions.
+
+### EPIC 10 – Backend Testing
+- **Goal:** Ensure microservices are thoroughly tested.
+- **Implementation Order / Todo:**
+  1. Unit tests for service logic.
+  2. Integration tests for endpoints.
+  3. DB-backed API tests.
+  4. CI pipeline integration.
+
+### EPIC 11 – E2E & Performance Testing
+- **Goal:** Validate full system flows and scalability.
+- **Implementation Order / Todo:**
+  1. Playwright setup (e.g., `/tests/e2e` or `/packages/e2e-tests`).
+  2. Implement multi-service E2E tests.
+  3. Implement k6 load tests.
+  4. Integrate tests into CI/CD.
+
+### EPIC 12 – Production Hardening
+- **Goal:** Make the system enterprise-ready.
+- **Implementation Order / Todo:**
+  1. Global error handling across services.
+  2. Centralized logging and monitoring dashboards.
+  3. Dockerization per service.
+  4. Swagger/OpenAPI documentation.
+  5. Feature flags for controlled rollout.
+  6. Observability with Prometheus/Grafana + ELK.
+
+---
+
+## 16. Approval
+
+**Prepared by:** Bojan Pavlovic  
+**Version:** 2.0 (merged from `sms_brd_v1` and `sms_brd_v2`)
+

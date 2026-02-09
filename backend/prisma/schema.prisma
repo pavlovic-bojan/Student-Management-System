@@ -1,0 +1,258 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Core user of the platform (Platform Admin, School Admin, Professor, Student).
+model User {
+  id        String      @id @default(uuid())
+  email     String      @unique
+  password  String
+  firstName String
+  lastName  String
+  role      UserRole
+  tenantId  String
+  tenant    Tenant      @relation(fields: [tenantId], references: [id])
+  coursesAsProfessor Course[] @relation("CourseProfessor")
+
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@index([tenantId])
+}
+
+/// Educational institution (university, college, school).
+model Tenant {
+  id          String    @id @default(uuid())
+  name        String
+  code        String    @unique
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  users        User[]
+  students     Student[]
+  programs     Program[]
+  courses      Course[]
+  examPeriods  ExamPeriod[]
+  exams        ExamTerm[]
+  tuitions     Tuition[]
+  payments     Payment[]
+  transcripts  Transcript[]
+}
+
+model Student {
+  id           String        @id @default(uuid())
+  indexNumber  String
+  firstName    String
+  lastName     String
+  status       StudentStatus @default(ACTIVE)
+  tenantId     String
+  tenant       Tenant        @relation(fields: [tenantId], references: [id])
+
+  programId    String?
+  program      Program?      @relation(fields: [programId], references: [id])
+
+  enrollments       Enrollment[]
+  transcripts       Transcript[]
+  payments          Payment[]
+  examRegistrations ExamRegistration[]
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@unique([tenantId, indexNumber])
+  @@index([tenantId, lastName])
+}
+
+model Program {
+  id          String     @id @default(uuid())
+  name        String
+  code        String
+  tenantId    String
+  tenant      Tenant     @relation(fields: [tenantId], references: [id])
+
+  version     Int        @default(1)
+  isActive    Boolean    @default(true)
+
+  courses     Course[]
+  students    Student[]
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@unique([tenantId, code, version])
+}
+
+model Course {
+  id           String        @id @default(uuid())
+  name         String
+  code         String
+  tenantId     String
+  tenant       Tenant        @relation(fields: [tenantId], references: [id])
+
+  programId    String?
+  program      Program?      @relation(fields: [programId], references: [id])
+
+  professorId  String?
+  professor    User?         @relation("CourseProfessor", fields: [professorId], references: [id])
+
+  offerings    CourseOffering[]
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@unique([tenantId, code])
+}
+
+model CourseOffering {
+  id         String    @id @default(uuid())
+  courseId   String
+  course     Course    @relation(fields: [courseId], references: [id])
+
+  term       String
+  year       Int
+
+  enrollments Enrollment[]
+  examTerms   ExamTerm[]
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@unique([courseId, term, year])
+}
+
+model Enrollment {
+  id               String         @id @default(uuid())
+  studentId        String
+  student          Student        @relation(fields: [studentId], references: [id])
+  courseOfferingId String
+  courseOffering   CourseOffering @relation(fields: [courseOfferingId], references: [id])
+
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@unique([studentId, courseOfferingId])
+}
+
+model ExamPeriod {
+  id        String    @id @default(uuid())
+  name      String
+  term      String
+  year      Int
+  tenantId  String
+  tenant    Tenant    @relation(fields: [tenantId], references: [id])
+
+  examTerms ExamTerm[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model ExamTerm {
+  id               String        @id @default(uuid())
+  examPeriodId     String
+  examPeriod       ExamPeriod    @relation(fields: [examPeriodId], references: [id])
+  courseOfferingId String
+  courseOffering   CourseOffering @relation(fields: [courseOfferingId], references: [id])
+
+  date             DateTime
+
+  registrations    ExamRegistration[]
+
+  tenantId         String
+  tenant           Tenant        @relation(fields: [tenantId], references: [id])
+
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+model ExamRegistration {
+  id          String      @id @default(uuid())
+  studentId   String
+  student     Student     @relation(fields: [studentId], references: [id])
+  examTermId  String
+  examTerm    ExamTerm    @relation(fields: [examTermId], references: [id])
+
+  grade       Int?
+  status      ExamStatus  @default(REGISTERED)
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@unique([studentId, examTermId])
+}
+
+model Tuition {
+  id        String    @id @default(uuid())
+  tenantId  String
+  tenant    Tenant    @relation(fields: [tenantId], references: [id])
+
+  name      String
+  amount    Decimal
+
+  payments  Payment[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Payment {
+  id         String    @id @default(uuid())
+  tenantId   String
+  tenant     Tenant    @relation(fields: [tenantId], references: [id])
+
+  studentId  String
+  student    Student   @relation(fields: [studentId], references: [id])
+
+  tuitionId  String
+  tuition    Tuition   @relation(fields: [tuitionId], references: [id])
+
+  amount     Decimal
+  paidAt     DateTime
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model Transcript {
+  id         String    @id @default(uuid())
+  tenantId   String
+  tenant     Tenant    @relation(fields: [tenantId], references: [id])
+
+  studentId  String
+  student    Student   @relation(fields: [studentId], references: [id])
+
+  generatedAt DateTime @default(now())
+  gpa        Float?
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+enum UserRole {
+  PLATFORM_ADMIN
+  SCHOOL_ADMIN
+  PROFESSOR
+  STUDENT
+}
+
+enum StudentStatus {
+  ACTIVE
+  GRADUATED
+  DROPPED
+  SUSPENDED
+}
+
+enum ExamStatus {
+  REGISTERED
+  ATTENDED
+  PASSED
+  FAILED
+  CANCELLED
+}
+

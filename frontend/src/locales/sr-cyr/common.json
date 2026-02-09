@@ -1,0 +1,79 @@
+{
+  "appTitle": "Student Management System",
+  "nav": {
+    "title": "Навигација",
+    "tickets": "Тикети",
+    "notifications": "Обавештења",
+    "documents": "Документи",
+    "finance": "Финансије",
+    "calendar": "Календар",
+    "students": "Студенти",
+    "programs": "Програми",
+    "courses": "Курсеви",
+    "exams": "Испити",
+    "records": "Досије"
+  },
+  "tenant": {
+    "select": "Изабери tenant",
+    "none": "Није изабран tenant",
+    "selectHint": "Изабери tenant у headerу да се учитају подаци."
+  },
+  "students": {
+    "title": "Студенти",
+    "add": "Додај студента",
+    "indexNumber": "Број индекса",
+    "firstName": "Име",
+    "lastName": "Презиме",
+    "empty": "Нема студената"
+  },
+  "programs": {
+    "title": "Програми",
+    "add": "Додај програм",
+    "name": "Назив",
+    "code": "Шифра",
+    "empty": "Нема програма"
+  },
+  "courses": {
+    "title": "Курсеви",
+    "add": "Додај курс",
+    "name": "Назив",
+    "code": "Шифра",
+    "program": "Програм",
+    "empty": "Нема курсева"
+  },
+  "exams": {
+    "title": "Испити",
+    "periods": "Испитни рокови",
+    "terms": "Испитни термини",
+    "addPeriod": "Додај испитни рок",
+    "name": "Назив",
+    "term": "Семестар",
+    "year": "Година",
+    "date": "Датум",
+    "emptyPeriods": "Нема испитних рокова",
+    "emptyTerms": "Нема испитних термина"
+  },
+  "finance": {
+    "title": "Финансије",
+    "tuitions": "Школарине",
+    "payments": "Уплате",
+    "addTuition": "Додај школарину",
+    "addPayment": "Додај уплату",
+    "name": "Назив",
+    "amount": "Износ",
+    "paidAt": "Датум уплате",
+    "student": "Студент",
+    "tuition": "Школарина",
+    "emptyTuitions": "Нема школарина",
+    "emptyPayments": "Нема уплата"
+  },
+  "records": {
+    "title": "Досије",
+    "transcripts": "Транскрипти",
+    "generate": "Генериши транскрипт",
+    "student": "Студент",
+    "gpa": "Просек",
+    "generatedAt": "Генерисано",
+    "empty": "Нема транскрипата"
+  }
+}

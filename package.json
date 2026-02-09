@@ -1,0 +1,33 @@
+{
+  "name": "student-management-system",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Multi-tenant Student Management System (SMS) - monorepo (backend, frontend, tests) following BRD and .cursor rules.",
+  "workspaces": [
+    "backend",
+    "frontend",
+    "tests",
+    "tests/e2e",
+    "tests/e2e/api",
+    "tests/e2e/db",
+    "tests/performance"
+  ],
+  "scripts": {
+    "backend:dev": "npm --workspace backend run dev",
+    "backend:test": "npm --workspace backend run test",
+    "backend:test:unit": "npm --workspace backend run test:unit",
+    "backend:test:integration": "npm --workspace backend run test:integration",
+    "frontend:dev": "npm --workspace frontend run dev",
+    "frontend:test": "npm --workspace frontend run test",
+    "tests:e2e": "npm --workspace tests/e2e run test",
+    "tests:api": "npm --workspace tests/e2e/api run test",
+    "tests:db": "npm --workspace tests/e2e/db run test",
+    "tests:performance": "npm --workspace tests/performance run test",
+    "test:all": "npm run backend:test && npm run frontend:test && npm run tests:api && npm run tests:db && npm run tests:e2e && npm run tests:performance",
+    "lint": "npm --workspace backend run lint && npm --workspace frontend run lint"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
+

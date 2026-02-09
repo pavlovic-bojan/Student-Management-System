@@ -1,0 +1,79 @@
+{
+  "appTitle": "Student Management System",
+  "nav": {
+    "title": "Navigation",
+    "tickets": "Tickets",
+    "notifications": "Notifications",
+    "documents": "Documents",
+    "finance": "Finance",
+    "calendar": "Calendar",
+    "students": "Students",
+    "programs": "Programs",
+    "courses": "Courses",
+    "exams": "Exams",
+    "records": "Records"
+  },
+  "tenant": {
+    "select": "Select tenant",
+    "none": "No tenant selected",
+    "selectHint": "Select a tenant in the header to load data."
+  },
+  "students": {
+    "title": "Students",
+    "add": "Add student",
+    "indexNumber": "Index number",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "empty": "No students"
+  },
+  "programs": {
+    "title": "Programs",
+    "add": "Add program",
+    "name": "Name",
+    "code": "Code",
+    "empty": "No programs"
+  },
+  "courses": {
+    "title": "Courses",
+    "add": "Add course",
+    "name": "Name",
+    "code": "Code",
+    "program": "Program",
+    "empty": "No courses"
+  },
+  "exams": {
+    "title": "Exams",
+    "periods": "Exam periods",
+    "terms": "Exam terms",
+    "addPeriod": "Add exam period",
+    "name": "Name",
+    "term": "Term",
+    "year": "Year",
+    "date": "Date",
+    "emptyPeriods": "No exam periods",
+    "emptyTerms": "No exam terms"
+  },
+  "finance": {
+    "title": "Finance",
+    "tuitions": "Tuitions",
+    "payments": "Payments",
+    "addTuition": "Add tuition",
+    "addPayment": "Add payment",
+    "name": "Name",
+    "amount": "Amount",
+    "paidAt": "Paid at",
+    "student": "Student",
+    "tuition": "Tuition",
+    "emptyTuitions": "No tuitions",
+    "emptyPayments": "No payments"
+  },
+  "records": {
+    "title": "Records",
+    "transcripts": "Transcripts",
+    "generate": "Generate transcript",
+    "student": "Student",
+    "gpa": "GPA",
+    "generatedAt": "Generated at",
+    "empty": "No transcripts"
+  }
+}

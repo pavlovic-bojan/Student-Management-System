@@ -1,0 +1,19 @@
+{
+  "tickets": "Тикети",
+  "statusNew": "Нови",
+  "statusInProgress": "У току",
+  "statusPriority": "Приоритетни",
+  "plannedWorkToday": "Планирани радови данас",
+  "addPhoto": "Додај фотографију",
+  "submitTicket": "Пошаљи пријаву",
+  "submitForm": {
+    "title": "Пошаљи пријаву",
+    "subject": "Наслов",
+    "description": "Опис",
+    "submit": "Пошаљи",
+    "cancel": "Откажи"
+  },
+  "validation": {
+    "required": "Обавезно"
+  }
+}

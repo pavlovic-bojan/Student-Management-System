@@ -1,0 +1,19 @@
+{
+  "tickets": "Tickets",
+  "statusNew": "New",
+  "statusInProgress": "In progress",
+  "statusPriority": "Priority",
+  "plannedWorkToday": "Planned work today",
+  "addPhoto": "Add photo",
+  "submitTicket": "Submit report",
+  "submitForm": {
+    "title": "Submit report",
+    "subject": "Subject",
+    "description": "Description",
+    "submit": "Submit",
+    "cancel": "Cancel"
+  },
+  "validation": {
+    "required": "Required"
+  }
+}
