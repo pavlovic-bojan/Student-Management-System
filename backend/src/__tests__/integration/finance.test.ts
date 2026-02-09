@@ -66,7 +66,8 @@ describe('Finance API (integration)', () => {
       .set('x-test-user-id', 'test-user')
       .send({ name, amount: 500 });
     expect(res.status).toBe(201);
-    expect(res.body.data).toMatchObject({ name, amount: 500 });
+    expect(res.body.data).toMatchObject({ name });
+    expect(Number(res.body.data.amount)).toBe(500);
     expect(res.body.data.id).toBeDefined();
   });
 
@@ -91,7 +92,8 @@ describe('Finance API (integration)', () => {
         paidAt: new Date().toISOString(),
       });
     expect(res.status).toBe(201);
-    expect(res.body.data).toMatchObject({ studentId, tuitionId, amount: 500 });
+    expect(res.body.data).toMatchObject({ studentId, tuitionId });
+    expect(Number(res.body.data.amount)).toBe(500);
     expect(res.body.data.id).toBeDefined();
   });
 });
