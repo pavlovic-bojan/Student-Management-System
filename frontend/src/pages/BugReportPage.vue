@@ -60,6 +60,15 @@
           {{ t('bugReport.cooldown', { seconds: cooldownRemaining }) }}
         </q-banner>
 
+        <q-banner
+          v-if="errorMessage"
+          class="bg-negative text-white"
+          rounded
+          data-test="bug-error-banner"
+        >
+          {{ errorMessage }}
+        </q-banner>
+
         <div class="row q-gutter-sm">
           <q-btn
             type="submit"
@@ -83,7 +92,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, computed } from 'vue';
+import { reactive, ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
@@ -106,6 +115,7 @@ const form = reactive({
 });
 
 const submitting = reactive({ value: false });
+const errorMessage = ref<string | null>(null);
 
 const lastSentAt = (() => {
   const raw = typeof window !== 'undefined' ? window.localStorage.getItem(STORAGE_KEY) : null;
@@ -130,6 +140,7 @@ function saveLastSent() {
 
 async function onSubmit() {
   if (!form.subject || !form.steps || !form.expectedActual) {
+    errorMessage.value = t('validation.required');
     $q.notify({
       type: 'warning',
       message: t('validation.required'),
@@ -137,6 +148,7 @@ async function onSubmit() {
     return;
   }
   if (cooldownRemaining.value > 0) {
+    errorMessage.value = t('bugReport.cooldown', { seconds: cooldownRemaining.value });
     $q.notify({
       type: 'warning',
       message: t('bugReport.cooldown', { seconds: cooldownRemaining.value }),
@@ -145,6 +157,7 @@ async function onSubmit() {
   }
 
   submitting.value = true;
+  errorMessage.value = null;
   try {
     await ticketsApi.create({
       subject: form.subject,
@@ -163,6 +176,7 @@ async function onSubmit() {
     form.steps = '';
     form.expectedActual = '';
     form.description = '';
+    goBack();
   } catch (e) {
     let message = t('bugReport.submitError');
     if (axios.isAxiosError(e)) {
@@ -171,6 +185,7 @@ async function onSubmit() {
         message = backendMessage;
       }
     }
+    errorMessage.value = message;
     $q.notify({
       type: 'negative',
       message,
