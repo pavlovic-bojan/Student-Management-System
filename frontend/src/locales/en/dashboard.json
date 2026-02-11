@@ -14,6 +14,10 @@
     "cancel": "Cancel"
   },
   "validation": {
-    "required": "Required"
+    "required": "Required",
+    "bugSubjectLength": "Subject must be between 5 and 200 characters.",
+    "bugDescriptionLength": "Description must be between 10 and 2000 characters.",
+    "bugStepsLength": "Steps must be between 5 and 4000 characters.",
+    "bugExpectedActualLength": "Expected vs actual must be between 5 and 4000 characters."
   }
 }

@@ -14,6 +14,10 @@
     "cancel": "Otkaži"
   },
   "validation": {
-    "required": "Obavezno"
+    "required": "Obavezno",
+    "bugSubjectLength": "Naslov mora imati između 5 i 200 karaktera.",
+    "bugDescriptionLength": "Opis mora imati između 10 i 2000 karaktera.",
+    "bugStepsLength": "Koraci moraju imati između 5 i 4000 karaktera.",
+    "bugExpectedActualLength": "Očekivano vs. realno mora imati između 5 i 4000 karaktera."
   }
 }

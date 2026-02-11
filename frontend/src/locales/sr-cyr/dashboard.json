@@ -14,6 +14,10 @@
     "cancel": "Откажи"
   },
   "validation": {
-    "required": "Обавезно"
+    "required": "Обавезно",
+    "bugSubjectLength": "Наслов мора имати између 5 и 200 карактера.",
+    "bugDescriptionLength": "Опис мора имати између 10 и 2000 карактера.",
+    "bugStepsLength": "Кораци морају имати између 5 и 4000 карактера.",
+    "bugExpectedActualLength": "Очекивано vs. реално мора имати између 5 и 4000 карактера."
   }
 }

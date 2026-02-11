@@ -11,7 +11,6 @@
           :label="t('submitForm.subject')"
           outlined
           dense
-          :rules="[(v: string) => !!v || t('validation.required')]"
           data-test="bug-subject"
         />
         <q-input
@@ -28,7 +27,6 @@
           dense
           type="textarea"
           rows="4"
-          :rules="[(v: string) => !!v || t('validation.required')]"
           data-test="bug-steps"
         />
         <q-input
@@ -38,7 +36,6 @@
           dense
           type="textarea"
           rows="4"
-          :rules="[(v: string) => !!v || t('validation.required')]"
           data-test="bug-expected-actual"
         />
         <q-input
@@ -94,7 +91,6 @@
 <script setup lang="ts">
 import { reactive, ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
 import axios from 'axios';
 import { ticketsApi } from '@/api/tickets.api';
@@ -103,7 +99,6 @@ const COOLDOWN_SECONDS = 60;
 const STORAGE_KEY = 'bugReportLastAt';
 
 const router = useRouter();
-const $q = useQuasar();
 const { t } = useI18n();
 
 const form = reactive({
@@ -138,21 +133,44 @@ function saveLastSent() {
   }
 }
 
+function validateForm(): boolean {
+  const errors: string[] = [];
+  const subject = form.subject.trim();
+  const description = form.description.trim();
+  const steps = form.steps.trim();
+  const expectedActual = form.expectedActual.trim();
+
+  if (!subject || subject.length < 5 || subject.length > 200) {
+    errors.push(t('validation.bugSubjectLength'));
+  }
+
+  if (!description || description.length < 10 || description.length > 2000) {
+    errors.push(t('validation.bugDescriptionLength'));
+  }
+
+  if (!steps || steps.length < 5 || steps.length > 4000) {
+    errors.push(t('validation.bugStepsLength'));
+  }
+
+  if (!expectedActual || expectedActual.length < 5 || expectedActual.length > 4000) {
+    errors.push(t('validation.bugExpectedActualLength'));
+  }
+
+  if (errors.length > 0) {
+    errorMessage.value = errors.join('\n');
+    return false;
+  }
+
+  errorMessage.value = null;
+  return true;
+}
+
 async function onSubmit() {
-  if (!form.subject || !form.steps || !form.expectedActual) {
-    errorMessage.value = t('validation.required');
-    $q.notify({
-      type: 'warning',
-      message: t('validation.required'),
-    });
+  if (!validateForm()) {
     return;
   }
   if (cooldownRemaining.value > 0) {
     errorMessage.value = t('bugReport.cooldown', { seconds: cooldownRemaining.value });
-    $q.notify({
-      type: 'warning',
-      message: t('bugReport.cooldown', { seconds: cooldownRemaining.value }),
-    });
     return;
   }
 
@@ -178,18 +196,8 @@ async function onSubmit() {
     form.description = '';
     goBack();
   } catch (e) {
-    let message = t('bugReport.submitError');
-    if (axios.isAxiosError(e)) {
-      const backendMessage = (e.response?.data as any)?.message;
-      if (backendMessage && typeof backendMessage === 'string') {
-        message = backendMessage;
-      }
-    }
+    const message = t('bugReport.submitError');
     errorMessage.value = message;
-    $q.notify({
-      type: 'negative',
-      message,
-    });
   } finally {
     submitting.value = false;
   }
