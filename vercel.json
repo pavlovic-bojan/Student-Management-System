@@ -1,0 +1,10 @@
+{
+  // Ensure client-side routes like /bug-report work on refresh in Vercel
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
+  ]
+}
+
