@@ -157,57 +157,57 @@
 
           <q-space />
 
-          <q-select
-            :model-value="auth.tenantId"
-            :options="tenantOptions"
-            option-value="id"
-            option-label="name"
-            emit-value
-            map-options
-            :label="t('tenant.select')"
+          <!-- Language (left-most on the right side) -->
+          <q-btn-dropdown
+            flat
             dense
-            outlined
-            class="app-tenant-select"
-            data-test="tenant-select"
-            :loading="tenantsStore.loading"
-            readonly
-          />
+            no-icon-animation
+            class="app-locale-btn"
+            data-test="locale-menu"
+          >
+            <template #label>
+              <span>{{ currentLocale.flag }}</span>
+              <span v-if="currentLocale.short" class="q-ml-xs">{{ currentLocale.short }}</span>
+            </template>
+            <q-list class="q-pa-xs">
+              <q-item
+                v-for="opt in localeOptions"
+                :key="opt.value"
+                clickable
+                v-ripple
+                @click="setLocale(opt.value)"
+              >
+                <q-item-section avatar>
+                  <span>{{ opt.flag }}</span>
+                </q-item-section>
+                <q-item-section>{{ opt.label }}</q-item-section>
+              </q-item>
+            </q-list>
+          </q-btn-dropdown>
 
+          <!-- Theme toggle (light/dark) -->
+          <DarkModeToggle />
+
+          <!-- Notifications -->
           <q-btn
             flat
             round
             dense
             icon="notifications"
             :aria-label="t('header.notifications')"
+            class="q-ml-xs"
             data-test="button-notifications"
           >
             <q-tooltip>{{ t('header.notifications') }}</q-tooltip>
           </q-btn>
 
-          <q-select
-            :model-value="locale"
-            :options="localeOptions"
-            option-value="value"
-            option-label="label"
-            emit-value
-            map-options
-            dense
-            outlined
-            class="app-locale-select"
-            data-test="locale-select"
-            @update:model-value="setLocale"
-          >
-            <template #prepend>
-              <q-icon name="language" size="xs" />
-            </template>
-          </q-select>
-
+          <!-- User avatar + menu (right-most) -->
           <q-btn-dropdown
             v-model="userMenuOpen"
             flat
             dense
             no-icon-animation
-            class="app-user-menu"
+            class="app-user-menu q-ml-xs"
             data-test="user-menu"
           >
             <template #label>
@@ -236,16 +236,20 @@
                 <q-item-section>{{ t('header.settings') }}</q-item-section>
               </q-item>
               <q-separator />
-              <q-item clickable v-ripple @click="onLogoutFromMenu" data-test="user-menu-logout">
+              <q-item
+                clickable
+                v-ripple
+                @click="onLogoutFromMenu"
+                data-test="user-menu-logout"
+                class="text-negative app-user-logout-item"
+              >
                 <q-item-section avatar>
-                  <q-icon name="logout" size="sm" />
+                  <q-icon name="logout" size="sm" class="app-user-logout-icon" />
                 </q-item-section>
                 <q-item-section>{{ t('auth.logout') }}</q-item-section>
               </q-item>
             </q-list>
           </q-btn-dropdown>
-
-          <DarkModeToggle />
         </q-toolbar>
       </q-header>
 
@@ -332,12 +336,16 @@ const tenantOptions = computed(() =>
 );
 
 const localeOptions = [
-  { value: 'en', label: 'English' },
-  { value: 'sr-lat', label: 'Srpski (latinica)' },
-  { value: 'sr-cyr', label: 'Српски (ћирилица)' },
+  { value: 'en', label: 'English', flag: '🇬🇧', short: '' },
+  { value: 'sr-lat', label: 'Srpski (latinica)', flag: '🇷🇸', short: 'LAT' },
+  { value: 'sr-cyr', label: 'Српски (ћирилица)', flag: '🇷🇸', short: 'ЋИР' },
 ];
 
 const locale = computed(() => i18nLocale.value);
+
+const currentLocale = computed(() => {
+  return localeOptions.find((opt) => opt.value === locale.value) ?? localeOptions[0];
+});
 
 function setLocale(value: string) {
   i18nLocale.value = value;

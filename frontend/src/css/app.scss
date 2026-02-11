@@ -77,6 +77,10 @@ body.body--dark {
   max-width: 160px;
 }
 
+.app-locale-btn {
+  margin-right: 4px;
+}
+
 .app-user-menu {
   max-width: 180px;
 
@@ -85,6 +89,18 @@ body.body--dark {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+}
+
+.app-user-logout-item {
+  font-weight: 500;
+}
+
+.app-user-logout-icon {
+  color: #f44336 !important;
+}
+
+body.body--dark .app-user-logout-icon {
+  color: #ff7961 !important;
 }
 
 // ---------------------------------------------------------------------------
