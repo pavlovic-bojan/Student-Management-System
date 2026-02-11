@@ -114,6 +114,13 @@
     "generatedAt": "Generated at",
     "empty": "No transcripts"
   },
+  "profile": {
+    "title": "My profile",
+    "save": "Save changes",
+    "updated": "Profile updated.",
+    "updateError": "Failed to update profile.",
+    "readOnlyHint": "Your profile details are managed by an administrator."
+  },
   "users": {
     "title": "Users",
     "createUser": "Create user",

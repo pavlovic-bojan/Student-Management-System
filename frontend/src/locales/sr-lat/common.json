@@ -114,6 +114,13 @@
     "generatedAt": "Generisano",
     "empty": "Nema transkripta"
   },
+  "profile": {
+    "title": "Moj profil",
+    "save": "Sačuvaj izmene",
+    "updated": "Profil je ažuriran.",
+    "updateError": "Greška pri ažuriranju profila.",
+    "readOnlyHint": "Detalje vašeg profila održava administrator."
+  },
   "users": {
     "title": "Korisnici",
     "createUser": "Kreiraj korisnika",

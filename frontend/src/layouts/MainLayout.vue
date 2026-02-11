@@ -223,7 +223,7 @@
                 </q-item-section>
               </q-item>
               <q-separator />
-              <q-item clickable v-ripple @click="userMenuOpen = false" data-test="user-menu-profile">
+              <q-item clickable v-ripple @click="goToProfile" data-test="user-menu-profile">
                 <q-item-section avatar>
                   <q-icon name="person" size="sm" />
                 </q-item-section>
@@ -387,6 +387,11 @@ const userMenuOpen = ref(false);
 async function onLogoutFromMenu() {
   userMenuOpen.value = false;
   await handleLogout();
+}
+
+function goToProfile() {
+  userMenuOpen.value = false;
+  router.push({ name: 'profile' });
 }
 
 // Auto-open sidebar on desktop (>= 999px), close on mobile (same as Park)
