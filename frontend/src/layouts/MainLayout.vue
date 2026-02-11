@@ -207,11 +207,14 @@
             flat
             dense
             no-icon-animation
-            :label="userDisplayName"
             class="app-user-menu"
             data-test="user-menu"
-            dropdown-icon="person"
           >
+            <template #label>
+              <q-avatar color="primary" text-color="white" size="32px">
+                {{ userInitials }}
+              </q-avatar>
+            </template>
             <q-list class="q-pa-sm">
               <q-item class="q-px-md q-py-sm" dense>
                 <q-item-section>
@@ -345,6 +348,18 @@ const userDisplayName = computed(() => {
   const u = auth.user;
   if (!u) return '';
   return [u.firstName, u.lastName].filter(Boolean).join(' ') || u.email;
+});
+
+const userInitials = computed(() => {
+  const u = auth.user;
+  if (!u) return '?';
+  const first = (u.firstName ?? '').trim();
+  const last = (u.lastName ?? '').trim();
+  const f = first.charAt(0);
+  const l = last.charAt(0);
+  const emailFirst = (u.email ?? '').trim().charAt(0) || '?';
+  const initials = (f + l) || f || emailFirst;
+  return initials.toUpperCase();
 });
 
 const roleLabel = computed(() => {
