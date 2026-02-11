@@ -45,19 +45,9 @@ jobs:
           cd frontend
           npm run build
 
-      # 6. Deploy to Vercel
-      - name: 🚀 Deploy to Vercel
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: ./frontend
-          vercel-args: '--prod'
-
-      # 7. Notify on success
-      - name: ✅ Deployment successful
+      # 6. Notify on success (deploy is handled by Vercel Git integration)
+      - name: ✅ Frontend CI successful
         if: success()
         run: |
-          echo "✅ Frontend deployed successfully!"
-          echo "🔗 URL: Check Vercel dashboard or project settings"
+          echo "✅ Frontend tests and build passed."
+          echo "🚀 Vercel will handle deployment via its GitHub integration."
