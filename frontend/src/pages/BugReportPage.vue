@@ -87,6 +87,7 @@ import { reactive, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
+import axios from 'axios';
 import { ticketsApi } from '@/api/tickets.api';
 
 const COOLDOWN_SECONDS = 60;
@@ -163,9 +164,16 @@ async function onSubmit() {
     form.expectedActual = '';
     form.description = '';
   } catch (e) {
+    let message = t('bugReport.submitError');
+    if (axios.isAxiosError(e)) {
+      const backendMessage = (e.response?.data as any)?.message;
+      if (backendMessage && typeof backendMessage === 'string') {
+        message = backendMessage;
+      }
+    }
     $q.notify({
       type: 'negative',
-      message: t('bugReport.submitError'),
+      message,
     });
   } finally {
     submitting.value = false;
