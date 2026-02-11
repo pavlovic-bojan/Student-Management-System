@@ -7,6 +7,17 @@
   "auth": {
     "logout": "Одјави се"
   },
+  "header": {
+    "myAccount": "Мој налог",
+    "profile": "Профил",
+    "settings": "Подешавања",
+    "notifications": "Обавештења",
+    "language": "Језик",
+    "rolePlatformAdmin": "Platform Admin",
+    "roleSchoolAdmin": "Школски Админ",
+    "roleProfessor": "Професор",
+    "roleStudent": "Студент"
+  },
   "nav": {
     "title": "Навигација",
     "tickets": "Тикети",

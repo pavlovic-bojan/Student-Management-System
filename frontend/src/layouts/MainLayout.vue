@@ -177,11 +177,70 @@
             flat
             round
             dense
-            icon="logout"
-            :label="t('auth.logout')"
-            @click="handleLogout"
-            data-test="button-logout"
-          />
+            icon="notifications"
+            :aria-label="t('header.notifications')"
+            data-test="button-notifications"
+          >
+            <q-tooltip>{{ t('header.notifications') }}</q-tooltip>
+          </q-btn>
+
+          <q-select
+            :model-value="locale"
+            :options="localeOptions"
+            option-value="value"
+            option-label="label"
+            emit-value
+            map-options
+            dense
+            outlined
+            class="app-locale-select"
+            data-test="locale-select"
+            @update:model-value="setLocale"
+          >
+            <template #prepend>
+              <q-icon name="language" size="xs" />
+            </template>
+          </q-select>
+
+          <q-btn-dropdown
+            v-model="userMenuOpen"
+            flat
+            dense
+            no-icon-animation
+            :label="userDisplayName"
+            class="app-user-menu"
+            data-test="user-menu"
+            dropdown-icon="person"
+          >
+            <q-list class="q-pa-sm">
+              <q-item class="q-px-md q-py-sm" dense>
+                <q-item-section>
+                  <q-item-label class="text-weight-medium">{{ userDisplayName }}</q-item-label>
+                  <q-item-label caption>{{ roleLabel }}</q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-separator />
+              <q-item clickable v-ripple @click="userMenuOpen = false" data-test="user-menu-profile">
+                <q-item-section avatar>
+                  <q-icon name="person" size="sm" />
+                </q-item-section>
+                <q-item-section>{{ t('header.profile') }}</q-item-section>
+              </q-item>
+              <q-item clickable v-ripple @click="userMenuOpen = false" data-test="user-menu-settings">
+                <q-item-section avatar>
+                  <q-icon name="settings" size="sm" />
+                </q-item-section>
+                <q-item-section>{{ t('header.settings') }}</q-item-section>
+              </q-item>
+              <q-separator />
+              <q-item clickable v-ripple @click="onLogoutFromMenu" data-test="user-menu-logout">
+                <q-item-section avatar>
+                  <q-icon name="logout" size="sm" />
+                </q-item-section>
+                <q-item-section>{{ t('auth.logout') }}</q-item-section>
+              </q-item>
+            </q-list>
+          </q-btn-dropdown>
 
           <DarkModeToggle />
         </q-toolbar>
@@ -245,7 +304,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, computed, onMounted, watch } from 'vue';
+import { reactive, ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
@@ -254,9 +313,11 @@ import { useAuthStore } from '@/stores/auth';
 import { useTenantsStore } from '@/stores/tenants';
 import DarkModeToggle from '@/components/common/DarkModeToggle.vue';
 
+const LOCALE_STORAGE_KEY = 'locale';
+
 const router = useRouter();
 const $q = useQuasar();
-const { t } = useI18n();
+const { t, locale: i18nLocale } = useI18n();
 const ui = useUiStore();
 const auth = useAuthStore();
 const tenantsStore = useTenantsStore();
@@ -266,6 +327,44 @@ const tenantOptions = computed(() =>
     ? tenantsStore.tenants.filter((t) => t.id === auth.tenantId)
     : tenantsStore.tenants
 );
+
+const localeOptions = [
+  { value: 'en', label: 'English' },
+  { value: 'sr-lat', label: 'Srpski (latinica)' },
+  { value: 'sr-cyr', label: 'Српски (ћирилица)' },
+];
+
+const locale = computed(() => i18nLocale.value);
+
+function setLocale(value: string) {
+  i18nLocale.value = value;
+  localStorage.setItem(LOCALE_STORAGE_KEY, value);
+}
+
+const userDisplayName = computed(() => {
+  const u = auth.user;
+  if (!u) return '';
+  return [u.firstName, u.lastName].filter(Boolean).join(' ') || u.email;
+});
+
+const roleLabel = computed(() => {
+  const role = auth.user?.role;
+  if (!role) return '';
+  const keyMap: Record<string, string> = {
+    PLATFORM_ADMIN: t('header.rolePlatformAdmin'),
+    SCHOOL_ADMIN: t('header.roleSchoolAdmin'),
+    PROFESSOR: t('header.roleProfessor'),
+    STUDENT: t('header.roleStudent'),
+  };
+  return keyMap[role] ?? role;
+});
+
+const userMenuOpen = ref(false);
+
+async function onLogoutFromMenu() {
+  userMenuOpen.value = false;
+  await handleLogout();
+}
 
 // Auto-open sidebar on desktop (>= 999px), close on mobile (same as Park)
 watch(
@@ -278,6 +377,10 @@ watch(
 
 onMounted(() => {
   tenantsStore.fetchTenants();
+  const saved = localStorage.getItem(LOCALE_STORAGE_KEY);
+  if (saved && ['en', 'sr-lat', 'sr-cyr'].includes(saved)) {
+    i18nLocale.value = saved;
+  }
 });
 
 async function handleLogout() {

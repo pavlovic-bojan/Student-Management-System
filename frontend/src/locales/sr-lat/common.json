@@ -7,6 +7,17 @@
   "auth": {
     "logout": "Odjavi se"
   },
+  "header": {
+    "myAccount": "Moj nalog",
+    "profile": "Profil",
+    "settings": "Podešavanja",
+    "notifications": "Obaveštenja",
+    "language": "Jezik",
+    "rolePlatformAdmin": "Platform Admin",
+    "roleSchoolAdmin": "Školski Admin",
+    "roleProfessor": "Profesor",
+    "roleStudent": "Student"
+  },
   "nav": {
     "title": "Navigacija",
     "tickets": "Tiketi",

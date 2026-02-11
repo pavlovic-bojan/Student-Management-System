@@ -72,6 +72,21 @@ body.body--dark {
   max-width: 280px;
 }
 
+.app-locale-select {
+  min-width: 140px;
+  max-width: 160px;
+}
+
+.app-user-menu {
+  max-width: 180px;
+
+  .q-btn__content {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Left nav drawer (hamburger menu)
 // ---------------------------------------------------------------------------

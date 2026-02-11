@@ -7,6 +7,17 @@
   "auth": {
     "logout": "Log out"
   },
+  "header": {
+    "myAccount": "My account",
+    "profile": "Profile",
+    "settings": "Settings",
+    "notifications": "Notifications",
+    "language": "Language",
+    "rolePlatformAdmin": "Platform Admin",
+    "roleSchoolAdmin": "School Admin",
+    "roleProfessor": "Professor",
+    "roleStudent": "Student"
+  },
   "nav": {
     "title": "Navigation",
     "tickets": "Tickets",
