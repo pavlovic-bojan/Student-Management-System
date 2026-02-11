@@ -48,6 +48,9 @@ components:
         id: { type: string, format: uuid }
         subject: { type: string }
         description: { type: string }
+        page: { type: string, nullable: true }
+        steps: { type: string, nullable: true }
+        expectedActual: { type: string, nullable: true }
         status: { type: string, enum: [NEW, IN_PROGRESS, RESOLVED] }
         tenantId: { type: string, format: uuid }
         createdById: { type: string, format: uuid }
@@ -424,6 +427,20 @@ paths:
                   type: string
                   minLength: 10
                   maxLength: 2000
+                page:
+                  type: string
+                  description: Page or module where the bug occurred
+                  maxLength: 255
+                steps:
+                  type: string
+                  description: Steps to reproduce the bug
+                  minLength: 5
+                  maxLength: 4000
+                expectedActual:
+                  type: string
+                  description: Expected vs. actual behavior
+                  minLength: 5
+                  maxLength: 4000
       responses:
         '201':
           description: Ticket created

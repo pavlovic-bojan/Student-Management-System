@@ -23,6 +23,9 @@ describe('TicketsService', () => {
       tenantId,
       subject: 'Valid subject',
       description: 'Valid description content',
+      page: 'Dashboard',
+      steps: 'Steps...',
+      expectedActual: 'Expected vs actual...',
       status: 'NEW',
       createdById: userId,
       createdAt: new Date(),
@@ -31,12 +34,18 @@ describe('TicketsService', () => {
     const result = await service.createTicket(tenantId, userId, {
       subject: '  Valid subject  ',
       description: '  Valid description content  ',
+      page: 'Dashboard',
+      steps: 'Steps...',
+      expectedActual: 'Expected vs actual...',
     });
 
     expect(repo.findLastTicketForUser).toHaveBeenCalledWith(userId);
     expect(repo.createTicket).toHaveBeenCalledWith(tenantId, userId, {
       subject: 'Valid subject',
       description: 'Valid description content',
+      page: 'Dashboard',
+      steps: 'Steps...',
+      expectedActual: 'Expected vs actual...',
     });
     expect(result.subject).toBe('Valid subject');
   });

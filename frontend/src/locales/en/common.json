@@ -125,7 +125,10 @@
   "bugReport": {
     "submitted": "Bug report submitted.",
     "submitError": "Failed to submit bug report.",
-    "cooldown": "You can submit another bug report in {seconds} seconds."
+    "cooldown": "You can submit another bug report in {seconds} seconds.",
+    "page": "Where did this happen? (page / module)",
+    "steps": "Steps to reproduce",
+    "expectedActual": "Expected vs. actual behavior"
   },
   "users": {
     "title": "Users",

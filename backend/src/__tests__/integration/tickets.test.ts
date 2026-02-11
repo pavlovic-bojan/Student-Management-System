@@ -26,12 +26,18 @@ describe('Tickets API (integration)', () => {
       .send({
         subject: 'Bug in dashboard',
         description: 'When I click on button X, I see an error in the console.',
+        page: 'Dashboard',
+        steps: '1. Login\n2. Open dashboard\n3. Click button X',
+        expectedActual: 'Expected: no error.\nActual: error in console.',
       });
 
     expect(res.status).toBe(201);
     expect(res.body.data).toMatchObject({
       subject: 'Bug in dashboard',
       description: 'When I click on button X, I see an error in the console.',
+      page: 'Dashboard',
+      steps: '1. Login\n2. Open dashboard\n3. Click button X',
+      expectedActual: 'Expected: no error.\nActual: error in console.',
       tenantId,
       createdById: 'user-tickets-1',
       status: 'NEW',

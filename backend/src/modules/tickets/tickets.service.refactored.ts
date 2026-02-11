@@ -32,6 +32,9 @@ export class TicketsService {
     return this.repo.createTicket(tenantId, userId, {
       subject: trimmedSubject,
       description: trimmedDescription,
+      page: dto.page,
+      steps: dto.steps,
+      expectedActual: dto.expectedActual,
     });
   }
 }

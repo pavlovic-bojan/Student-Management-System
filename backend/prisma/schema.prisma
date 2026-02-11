@@ -65,6 +65,9 @@ model Ticket {
   id          String      @id @default(uuid())
   subject     String
   description String
+  page        String?
+  steps       String?
+  expectedActual String?
   status      TicketStatus @default(NEW)
   tenantId    String
   tenant      Tenant      @relation(fields: [tenantId], references: [id])

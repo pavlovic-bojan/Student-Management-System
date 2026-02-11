@@ -13,6 +13,9 @@ export class TicketsRepository implements ITicketsRepository {
         createdById: userId,
         subject: dto.subject,
         description: dto.description,
+        page: dto.page,
+        steps: dto.steps,
+        expectedActual: dto.expectedActual,
       },
     });
     return row;

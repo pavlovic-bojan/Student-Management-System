@@ -35,6 +35,17 @@ export function registerTicketsRoutes(api: Router): void {
    *                 type: string
    *                 minLength: 10
    *                 maxLength: 2000
+   *               page:
+   *                 type: string
+   *                 maxLength: 255
+   *               steps:
+   *                 type: string
+   *                 minLength: 5
+   *                 maxLength: 4000
+   *               expectedActual:
+   *                 type: string
+   *                 minLength: 5
+   *                 maxLength: 4000
    *     responses:
    *       201:
    *         description: Ticket created
@@ -57,6 +68,21 @@ export function registerTicketsRoutes(api: Router): void {
         .isString()
         .isLength({ min: 10, max: 2000 })
         .withMessage('Description must be between 10 and 2000 characters'),
+      body('page')
+        .optional()
+        .isString()
+        .isLength({ max: 255 })
+        .withMessage('Page must be at most 255 characters'),
+      body('steps')
+        .optional()
+        .isString()
+        .isLength({ min: 5, max: 4000 })
+        .withMessage('Steps must be between 5 and 4000 characters when provided'),
+      body('expectedActual')
+        .optional()
+        .isString()
+        .isLength({ min: 5, max: 4000 })
+        .withMessage('Expected vs actual must be between 5 and 4000 characters when provided'),
     ],
     validateRequest,
     async (req: Request, res: Response, next: NextFunction) => {
@@ -69,6 +95,9 @@ export function registerTicketsRoutes(api: Router): void {
         const ticket = await service.createTicket(tenantId, userId, {
           subject: req.body.subject,
           description: req.body.description,
+          page: req.body.page,
+          steps: req.body.steps,
+          expectedActual: req.body.expectedActual,
         });
         res.status(201).json({ data: ticket });
       } catch (e: any) {

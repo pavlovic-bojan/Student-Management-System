@@ -175,6 +175,7 @@
                 :key="opt.value"
                 clickable
                 v-ripple
+                v-close-popup
                 @click="setLocale(opt.value)"
               >
                 <q-item-section avatar>

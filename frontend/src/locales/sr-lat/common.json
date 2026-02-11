@@ -125,7 +125,10 @@
   "bugReport": {
     "submitted": "Bag je prijavljen.",
     "submitError": "Greška pri slanju prijave.",
-    "cooldown": "Možete poslati novu prijavu za {seconds} sekundi."
+    "cooldown": "Možete poslati novu prijavu za {seconds} sekundi.",
+    "page": "Gde se bug pojavio (stranica / modul)",
+    "steps": "Koraci za reprodukciju",
+    "expectedActual": "Očekivano vs. realno ponašanje"
   },
   "users": {
     "title": "Korisnici",

@@ -15,12 +15,39 @@
           data-test="bug-subject"
         />
         <q-input
+          v-model="form.page"
+          :label="t('bugReport.page')"
+          outlined
+          dense
+          data-test="bug-page"
+        />
+        <q-input
+          v-model="form.steps"
+          :label="t('bugReport.steps')"
+          outlined
+          dense
+          type="textarea"
+          rows="4"
+          :rules="[(v: string) => !!v || t('validation.required')]"
+          data-test="bug-steps"
+        />
+        <q-input
+          v-model="form.expectedActual"
+          :label="t('bugReport.expectedActual')"
+          outlined
+          dense
+          type="textarea"
+          rows="4"
+          :rules="[(v: string) => !!v || t('validation.required')]"
+          data-test="bug-expected-actual"
+        />
+        <q-input
           v-model="form.description"
           :label="t('submitForm.description')"
           outlined
           dense
           type="textarea"
-          rows="5"
+          rows="3"
           data-test="bug-description"
         />
 
@@ -71,6 +98,9 @@ const { t } = useI18n();
 
 const form = reactive({
   subject: '',
+  page: '',
+  steps: '',
+  expectedActual: '',
   description: '',
 });
 
@@ -98,7 +128,13 @@ function saveLastSent() {
 }
 
 async function onSubmit() {
-  if (!form.subject || !form.description) return;
+  if (!form.subject || !form.steps || !form.expectedActual) {
+    $q.notify({
+      type: 'warning',
+      message: t('validation.required'),
+    });
+    return;
+  }
   if (cooldownRemaining.value > 0) {
     $q.notify({
       type: 'warning',
@@ -111,7 +147,10 @@ async function onSubmit() {
   try {
     await ticketsApi.create({
       subject: form.subject,
-      description: form.description,
+      description: form.description || '',
+      page: form.page || undefined,
+      steps: form.steps || undefined,
+      expectedActual: form.expectedActual || undefined,
     });
     saveLastSent();
     $q.notify({
@@ -119,6 +158,9 @@ async function onSubmit() {
       message: t('bugReport.submitted'),
     });
     form.subject = '';
+    form.page = '';
+    form.steps = '';
+    form.expectedActual = '';
     form.description = '';
   } catch (e) {
     $q.notify({
