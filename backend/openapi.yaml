@@ -19,6 +19,7 @@ tags:
   - name: Exams
   - name: Finance
   - name: Records
+  - name: Tickets
 
 components:
   securitySchemes:
@@ -39,6 +40,17 @@ components:
         role: { type: string, enum: [PLATFORM_ADMIN, SCHOOL_ADMIN, PROFESSOR, STUDENT] }
         tenantId: { type: string, format: uuid }
         suspended: { type: boolean }
+        createdAt: { type: string, format: date-time }
+
+    Ticket:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        subject: { type: string }
+        description: { type: string }
+        status: { type: string, enum: [NEW, IN_PROGRESS, RESOLVED] }
+        tenantId: { type: string, format: uuid }
+        createdById: { type: string, format: uuid }
         createdAt: { type: string, format: date-time }
 
 paths:
@@ -389,3 +401,39 @@ paths:
                 studentId: { type: string, format: uuid }
       responses:
         '201': { description: Transcript created }
+
+  /tickets:
+    post:
+      summary: Submit a bug report / ticket
+      description: Any authenticated user can submit a bug report for their current tenant. Basic rate limiting applies per user.
+      tags: [Tickets]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [subject, description]
+              properties:
+                subject:
+                  type: string
+                  minLength: 5
+                  maxLength: 200
+                description:
+                  type: string
+                  minLength: 10
+                  maxLength: 2000
+      responses:
+        '201':
+          description: Ticket created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Ticket'
+        '400': { description: Validation error }
+        '401': { description: Missing or invalid token }
+        '429': { description: Too many requests (cooldown not expired) }

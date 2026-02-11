@@ -19,6 +19,7 @@ import { registerCourseRoutes } from './modules/courses/courses.routes';
 import { registerExamRoutes } from './modules/exams/exams.routes';
 import { registerFinanceRoutes } from './modules/finance/finance.routes';
 import { registerRecordsRoutes } from './modules/records/records.routes';
+import { registerTicketsRoutes } from './modules/tickets/tickets.routes';
 
 const app = express();
 
@@ -51,6 +52,7 @@ registerCourseRoutes(api);
 registerExamRoutes(api);
 registerFinanceRoutes(api);
 registerRecordsRoutes(api);
+registerTicketsRoutes(api);
 
 app.use('/api', api);
 

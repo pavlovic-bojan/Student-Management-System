@@ -11,6 +11,7 @@
     "myAccount": "Moj nalog",
     "profile": "Profil",
     "settings": "Podešavanja",
+    "reportBug": "Prijavi bag",
     "notifications": "Obaveštenja",
     "language": "Jezik",
     "rolePlatformAdmin": "Platform Admin",
@@ -120,6 +121,11 @@
     "updated": "Profil je ažuriran.",
     "updateError": "Greška pri ažuriranju profila.",
     "readOnlyHint": "Detalje vašeg profila održava administrator."
+  },
+  "bugReport": {
+    "submitted": "Bag je prijavljen.",
+    "submitError": "Greška pri slanju prijave.",
+    "cooldown": "Možete poslati novu prijavu za {seconds} sekundi."
   },
   "users": {
     "title": "Korisnici",

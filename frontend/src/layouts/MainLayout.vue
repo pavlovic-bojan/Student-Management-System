@@ -229,11 +229,11 @@
                 </q-item-section>
                 <q-item-section>{{ t('header.profile') }}</q-item-section>
               </q-item>
-              <q-item clickable v-ripple @click="userMenuOpen = false" data-test="user-menu-settings">
+              <q-item clickable v-ripple @click="goToBugReport" data-test="user-menu-bug">
                 <q-item-section avatar>
-                  <q-icon name="settings" size="sm" />
+                  <q-icon name="bug_report" size="sm" />
                 </q-item-section>
-                <q-item-section>{{ t('header.settings') }}</q-item-section>
+                <q-item-section>{{ t('header.reportBug') }}</q-item-section>
               </q-item>
               <q-separator />
               <q-item
@@ -392,6 +392,11 @@ async function onLogoutFromMenu() {
 function goToProfile() {
   userMenuOpen.value = false;
   router.push({ name: 'profile' });
+}
+
+function goToBugReport() {
+  userMenuOpen.value = false;
+  router.push({ name: 'bug-report' });
 }
 
 // Auto-open sidebar on desktop (>= 999px), close on mobile (same as Park)

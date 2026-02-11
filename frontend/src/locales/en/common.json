@@ -11,6 +11,7 @@
     "myAccount": "My account",
     "profile": "Profile",
     "settings": "Settings",
+    "reportBug": "Report a bug",
     "notifications": "Notifications",
     "language": "Language",
     "rolePlatformAdmin": "Platform Admin",
@@ -120,6 +121,11 @@
     "updated": "Profile updated.",
     "updateError": "Failed to update profile.",
     "readOnlyHint": "Your profile details are managed by an administrator."
+  },
+  "bugReport": {
+    "submitted": "Bug report submitted.",
+    "submitError": "Failed to submit bug report.",
+    "cooldown": "You can submit another bug report in {seconds} seconds."
   },
   "users": {
     "title": "Users",

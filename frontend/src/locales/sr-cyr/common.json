@@ -11,6 +11,7 @@
     "myAccount": "Мој налог",
     "profile": "Профил",
     "settings": "Подешавања",
+    "reportBug": "Пријави баг",
     "notifications": "Обавештења",
     "language": "Језик",
     "rolePlatformAdmin": "Platform Admin",
@@ -120,6 +121,11 @@
     "updated": "Профил је ажуриран.",
     "updateError": "Грешка при ажурирању профила.",
     "readOnlyHint": "Детаље вашег профила одржава администратор."
+  },
+  "bugReport": {
+    "submitted": "Баг је пријављен.",
+    "submitError": "Грешка при слању пријаве.",
+    "cooldown": "Можете послати нову пријаву за {seconds} секунди."
   },
   "users": {
     "title": "Корисници",
