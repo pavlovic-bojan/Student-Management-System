@@ -16,6 +16,31 @@ describe('Tickets API (integration)', () => {
       },
     });
     tenantId = tenant.id;
+
+    // Create test users so Ticket.createdById foreign key is satisfied
+    await prisma.user.create({
+      data: {
+        id: 'user-tickets-1',
+        email: 'tickets1@example.com',
+        password: 'hashed-password',
+        firstName: 'Tickets',
+        lastName: 'UserOne',
+        role: 'PLATFORM_ADMIN',
+        tenantId,
+      },
+    });
+
+    await prisma.user.create({
+      data: {
+        id: 'user-tickets-3',
+        email: 'tickets3@example.com',
+        password: 'hashed-password',
+        firstName: 'Tickets',
+        lastName: 'UserThree',
+        role: 'PLATFORM_ADMIN',
+        tenantId,
+      },
+    });
   });
 
   it('POST /api/tickets should create a ticket when valid', async () => {
