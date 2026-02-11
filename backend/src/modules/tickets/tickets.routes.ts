@@ -46,7 +46,7 @@ export function registerTicketsRoutes(api: Router): void {
    *         description: Too many requests (cooldown not expired)
    */
   router.post(
-    '/tickets',
+    '/',
     authenticate,
     [
       body('subject')
