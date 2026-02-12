@@ -136,7 +136,13 @@
     "subtitle": "Nova obaveštenja koja zahtevaju vašu pažnju.",
     "empty": "Nema novih obaveštenja.",
     "goToTickets": "Otvori tikete",
-    "markAll": "Označi sve kao pročitano"
+    "markAll": "Označi sve kao pročitano",
+    "userAction": {
+      "platformCreated": "Platform Admin je kreirao korisnika {email}.",
+      "platformUpdated": "Platform Admin je izmenio korisnika {email}.",
+      "platformDeleted": "Platform Admin je obrisao korisnika {email}.",
+      "schoolUpdatedYou": "Vaš nalog je izmenio Školski Admin."
+    }
   },
   "users": {
     "title": "Korisnici",

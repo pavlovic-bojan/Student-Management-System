@@ -136,7 +136,13 @@
     "subtitle": "Нова обавештења која захтевају вашу пажњу.",
     "empty": "Нема нових обавештења.",
     "goToTickets": "Отвори тикете",
-    "markAll": "Означи све као прочитано"
+    "markAll": "Означи све као прочитано",
+    "userAction": {
+      "platformCreated": "Platform Admin је креирао корисника {email}.",
+      "platformUpdated": "Platform Admin је изменио корисника {email}.",
+      "platformDeleted": "Platform Admin је обрисао корисника {email}.",
+      "schoolUpdatedYou": "Ваш налог је изменио Школски Админ."
+    }
   },
   "users": {
     "title": "Корисници",

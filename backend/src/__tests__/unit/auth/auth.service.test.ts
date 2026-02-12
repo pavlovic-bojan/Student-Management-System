@@ -15,6 +15,12 @@ vi.mock('../../../prisma/client', () => ({
     tenant: {
       findUnique: vi.fn(),
     },
+    notification: {
+      create: vi.fn(),
+      createMany: vi.fn(),
+      findMany: vi.fn(),
+      updateMany: vi.fn(),
+    },
   },
 }));
 
@@ -343,6 +349,19 @@ describe('auth.service', () => {
 
       await authService.deleteUser('u2', { role: 'SCHOOL_ADMIN', tenantId: 't1', sub: 'u1' });
       expect(prisma.user.delete).toHaveBeenCalledWith({ where: { id: 'u2' } });
+    });
+  });
+
+  describe('createUserActionNotificationsForPlatformAdmins', () => {
+    it('should not create notifications when actor is not Platform Admin', async () => {
+      await authService.createUserActionNotificationsForPlatformAdmins(
+        'actor-id',
+        'SCHOOL_ADMIN',
+        'CREATED',
+        'target-id',
+        [],
+      );
+      expect(prisma.notification.createMany).not.toHaveBeenCalled();
     });
   });
 });

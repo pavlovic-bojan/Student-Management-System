@@ -20,6 +20,7 @@ tags:
   - name: Finance
   - name: Records
   - name: Tickets
+  - name: Notifications
 
 components:
   securitySchemes:
@@ -71,6 +72,38 @@ components:
         reporterRole:
           type: string
           enum: [PLATFORM_ADMIN, SCHOOL_ADMIN, PROFESSOR, STUDENT]
+
+    Notification:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        type: { type: string, example: USER_ACTION }
+        action:
+          type: string
+          enum: [CREATED, UPDATED, DELETED]
+        targetEmail:
+          type: string
+          format: email
+          nullable: true
+        actorRole:
+          type: string
+          nullable: true
+          enum: [PLATFORM_ADMIN, SCHOOL_ADMIN, PROFESSOR, STUDENT, null]
+        actorName:
+          type: string
+          nullable: true
+        tenantName:
+          type: string
+          nullable: true
+        changedFields:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        read:
+          type: boolean
 
 paths:
   /health:
@@ -441,6 +474,55 @@ paths:
                 studentId: { type: string, format: uuid }
       responses:
         '201': { description: Transcript created }
+
+  /notifications:
+    get:
+      summary: List notifications for current user
+      description: Returns unread notifications about user actions (created/updated/deleted) for the current user.
+      tags: [Notifications]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: query
+          name: unreadOnly
+          schema:
+            type: boolean
+          required: false
+          description: If true, only unread notifications are returned (default true).
+      responses:
+        '200':
+          description: List of notifications
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notifications:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Notification'
+        '401': { description: Missing or invalid token }
+
+  /notifications/mark-read:
+    post:
+      summary: Mark notifications as read
+      description: Marks the given notification ids as read for the current user.
+      tags: [Notifications]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+      responses:
+        '204': { description: Notifications marked as read }
+        '401': { description: Missing or invalid token }
 
   /tickets:
     post:

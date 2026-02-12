@@ -125,6 +125,98 @@ export async function forgotPassword(email: string): Promise<{ message: string }
   return { message: 'If an account with that email exists, a password reset link has been sent.' };
 }
 
+export async function createUserActionNotificationsForPlatformAdmins(
+  actorId: string,
+  actorRole: UserRole,
+  action: 'CREATED' | 'UPDATED' | 'DELETED',
+  targetUserId: string,
+  changedFields: string[] = []
+): Promise<void> {
+  if (actorRole !== 'PLATFORM_ADMIN') return;
+
+  const [actor, target] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: actorId },
+      select: { firstName: true, lastName: true, role: true },
+    }),
+    prisma.user.findUnique({
+      where: { id: targetUserId },
+      select: { id: true, email: true, tenantId: true },
+    }),
+  ]);
+
+  if (!actor || !target) return;
+
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: target.tenantId },
+    select: { name: true },
+  });
+
+  const actorName = [actor.firstName, actor.lastName].filter(Boolean).join(' ') || null;
+  const tenantName = tenant?.name ?? null;
+
+  const schoolAdmins = await prisma.user.findMany({
+    where: { tenantId: target.tenantId, role: 'SCHOOL_ADMIN', suspended: false },
+    select: { id: true },
+  });
+
+  if (schoolAdmins.length === 0) return;
+
+  await prisma.notification.createMany({
+    data: schoolAdmins.map((sa) => ({
+      userId: sa.id,
+      type: 'USER_ACTION',
+      action,
+      targetEmail: target.email,
+      actorRole: actor.role,
+      actorName,
+      tenantName,
+      changedFields,
+    })),
+  });
+}
+
+export async function createUserEditedNotificationForUserBySchoolAdmin(
+  actorId: string,
+  targetUserId: string,
+  changedFields: string[] = []
+): Promise<void> {
+  const [actor, target] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: actorId },
+      select: { firstName: true, lastName: true, role: true, tenantId: true },
+    }),
+    prisma.user.findUnique({
+      where: { id: targetUserId },
+      select: { id: true, email: true, tenantId: true },
+    }),
+  ]);
+
+  if (!actor || !target) return;
+  if (actor.role !== 'SCHOOL_ADMIN') return;
+
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: target.tenantId },
+    select: { name: true },
+  });
+
+  const actorName = [actor.firstName, actor.lastName].filter(Boolean).join(' ') || null;
+  const tenantName = tenant?.name ?? null;
+
+  await prisma.notification.create({
+    data: {
+      userId: target.id,
+      type: 'USER_ACTION',
+      action: 'UPDATED',
+      targetEmail: target.email,
+      actorRole: actor.role,
+      actorName,
+      tenantName,
+      changedFields,
+    },
+  });
+}
+
 /** List users for a tenant. Platform Admin can pass any tenantId; School Admin only their own. */
 export async function listUsers(tenantId: string): Promise<UserListItem[]> {
   const users = await prisma.user.findMany({
@@ -247,5 +339,11 @@ export async function deleteUser(
   if (target.role === 'PLATFORM_ADMIN' && caller.role !== 'PLATFORM_ADMIN') {
     throw new ApiError('Cannot delete Platform Admin', 403);
   }
+  await createUserActionNotificationsForPlatformAdmins(
+    caller.sub,
+    caller.role as UserRole,
+    'DELETED',
+    userId
+  );
   await prisma.user.delete({ where: { id: userId } });
 }

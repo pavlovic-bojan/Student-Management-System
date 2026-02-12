@@ -136,7 +136,13 @@
     "subtitle": "New notifications that require your attention.",
     "empty": "No new notifications.",
     "goToTickets": "Open tickets",
-    "markAll": "Mark all as read"
+    "markAll": "Mark all as read",
+    "userAction": {
+      "platformCreated": "Platform Admin created user {email}.",
+      "platformUpdated": "Platform Admin updated user {email}.",
+      "platformDeleted": "Platform Admin deleted user {email}.",
+      "schoolUpdatedYou": "Your account was updated by School Admin."
+    }
   },
   "users": {
     "title": "Users",

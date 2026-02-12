@@ -551,8 +551,10 @@ onMounted(() => {
   // Start simple polling for new relevant tickets (bug reports) for admins
   if (auth.user?.role === 'PLATFORM_ADMIN' || auth.user?.role === 'SCHOOL_ADMIN') {
     void notifications.pollTickets();
+    void notifications.pollUserNotifications();
     setInterval(() => {
       void notifications.pollTickets();
+      void notifications.pollUserNotifications();
     }, 30000);
   }
 });

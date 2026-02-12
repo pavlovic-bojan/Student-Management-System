@@ -316,6 +316,36 @@ describe('Auth & Users API (integration)', () => {
       });
     });
 
+    it('should create notification for student when School Admin edits them', async () => {
+      // Clear any existing notifications for this student
+      await prisma.notification.deleteMany({ where: { userId: studentId } });
+
+      const res = await request(app)
+        .patch(`/api/users/${studentId}`)
+        .set('x-test-tenant-id', tenantId)
+        .set('x-test-user-id', schoolAdminId)
+        .set('x-test-role', 'SCHOOL_ADMIN')
+        .send({ lastName: 'UserUpdated' });
+      expect(res.status).toBe(200);
+
+      const notifications = await prisma.notification.findMany({ where: { userId: studentId } });
+      expect(notifications.length).toBe(1);
+      expect(notifications[0]).toMatchObject({
+        type: 'USER_ACTION',
+        action: 'UPDATED',
+        actorRole: 'SCHOOL_ADMIN',
+        targetEmail: studentEmail,
+      });
+      expect(notifications[0].changedFields).toContain('lastName');
+
+      // revert change & clean notifications
+      await prisma.user.update({
+        where: { id: studentId },
+        data: { lastName: 'User' },
+      });
+      await prisma.notification.deleteMany({ where: { userId: studentId } });
+    });
+
     it('should return 200 when updating suspended flag', async () => {
       const res = await request(app)
         .patch(`/api/users/${studentId}`)
@@ -369,6 +399,40 @@ describe('Auth & Users API (integration)', () => {
       expect(res.status).toBe(204);
       const gone = await prisma.user.findUnique({ where: { id: deleteTargetId } });
       expect(gone).toBeNull();
+    });
+
+    it('should create notifications for School Admins when Platform Admin deletes user', async () => {
+      const hashed = await bcrypt.hash('pass12345', SALT_ROUNDS);
+      const target = await prisma.user.create({
+        data: {
+          email: `notify-delete-${Date.now()}@test.edu`,
+          password: hashed,
+          firstName: 'Notify',
+          lastName: 'Delete',
+          role: 'STUDENT',
+          tenantId,
+        },
+      });
+
+      await prisma.notification.deleteMany({ where: { userId: schoolAdminId } });
+
+      const res = await request(app)
+        .delete(`/api/users/${target.id}`)
+        .set('x-test-tenant-id', tenantId)
+        .set('x-test-user-id', platformAdminId)
+        .set('x-test-role', 'PLATFORM_ADMIN');
+      expect(res.status).toBe(204);
+
+      const notifs = await prisma.notification.findMany({ where: { userId: schoolAdminId } });
+      expect(notifs.length).toBe(1);
+      expect(notifs[0]).toMatchObject({
+        type: 'USER_ACTION',
+        action: 'DELETED',
+        targetEmail: target.email,
+        actorRole: 'PLATFORM_ADMIN',
+      });
+
+      await prisma.notification.deleteMany({ where: { userId: schoolAdminId } });
     });
   });
 });

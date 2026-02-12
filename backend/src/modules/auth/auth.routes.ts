@@ -149,10 +149,35 @@ export function registerAuthRoutes(api: Router): void {
     validateRequest,
     async (req: Request, res: Response, next: NextFunction) => {
       try {
+        const callerRole = req.user!.role;
+        const changedFields = Object.keys(req.body).filter((k) =>
+          ['firstName', 'lastName', 'role', 'suspended'].includes(k)
+        );
         const user = await authService.updateUser(req.params.id, req.body, {
-          role: req.user!.role,
+          role: callerRole,
           tenantId: req.user!.tenantId,
         });
+
+        // If Platform Admin updated a user, notify School Admins of that tenant
+        if (callerRole === 'PLATFORM_ADMIN') {
+          await authService.createUserActionNotificationsForPlatformAdmins(
+            req.user!.sub,
+            callerRole as UserRole,
+            'UPDATED',
+            user.id,
+            changedFields
+          );
+        }
+
+        // If School Admin updated a user, notify that user
+        if (callerRole === 'SCHOOL_ADMIN') {
+          await authService.createUserEditedNotificationForUserBySchoolAdmin(
+            req.user!.sub,
+            user.id,
+            changedFields
+          );
+        }
+
         res.json(user);
       } catch (e: any) {
         next(e);
@@ -291,6 +316,7 @@ export function registerAuthRoutes(api: Router): void {
             role: data.role as UserRole,
             tenantId: data.tenantId,
           });
+          // No notifications for professor-created users (students only) per BRD.
           return res.status(201).json(result);
         }
 
@@ -305,6 +331,16 @@ export function registerAuthRoutes(api: Router): void {
           role: data.role as UserRole,
           tenantId,
         });
+        // If Platform Admin created a user, notify School Admins of that tenant
+        if (callerRole === 'PLATFORM_ADMIN') {
+          await authService.createUserActionNotificationsForPlatformAdmins(
+            req.user!.sub,
+            callerRole as UserRole,
+            'CREATED',
+            result.user.id,
+            []
+          );
+        }
         res.status(201).json(result);
       } catch (e: any) {
         next(e);

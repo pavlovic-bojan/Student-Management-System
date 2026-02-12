@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { ticketsApi, type TicketListItem } from '@/api/tickets.api';
+import { notificationsApi, type UserActionNotification } from '@/api/notifications.api';
 
 const STORAGE_KEY_LAST_SEEN = 'notifications_last_seen_ticket_at';
 
@@ -9,12 +10,15 @@ export const useNotificationsStore = defineStore('notifications', () => {
   const auth = useAuthStore();
 
   const unreadTickets = ref<TicketListItem[]>([]);
+  const userNotifications = ref<UserActionNotification[]>([]);
   const lastSeenCreatedAt = ref<string | null>(
     typeof window !== 'undefined' ? window.localStorage.getItem(STORAGE_KEY_LAST_SEEN) : null,
   );
   const polling = ref(false);
 
-  const unreadCount = computed(() => unreadTickets.value.length);
+  const unreadCount = computed(
+    () => unreadTickets.value.length + userNotifications.value.length,
+  );
 
   function isRelevantForCurrentUser(ticket: TicketListItem): boolean {
     const user = auth.user;
@@ -66,6 +70,12 @@ export const useNotificationsStore = defineStore('notifications', () => {
     }
   }
 
+  async function pollUserNotifications() {
+    if (!auth.isAuthenticated) return;
+    const res = await notificationsApi.list(true);
+    userNotifications.value = res.notifications;
+  }
+
   function markAllRead() {
     if (unreadTickets.value.length > 0) {
       const maxCreated = unreadTickets.value.reduce(
@@ -78,13 +88,22 @@ export const useNotificationsStore = defineStore('notifications', () => {
       }
     }
     unreadTickets.value = [];
+    if (userNotifications.value.length > 0) {
+      const ids = userNotifications.value.map((n) => n.id);
+      void notificationsApi.markRead(ids).catch(() => {
+        // ignore errors for now; frontend still clears local list
+      });
+      userNotifications.value = [];
+    }
   }
 
   return {
     unreadTickets,
+    userNotifications,
     unreadCount,
     lastSeenCreatedAt,
     pollTickets,
+    pollUserNotifications,
     markAllRead,
   };
 });
