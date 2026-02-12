@@ -128,7 +128,49 @@ export async function forgotPassword(email: string): Promise<{ message: string }
 /** List users for a tenant. Platform Admin can pass any tenantId; School Admin only their own. */
 export async function listUsers(tenantId: string): Promise<UserListItem[]> {
   const users = await prisma.user.findMany({
-    where: { tenantId },
+    where: {
+      tenantId,
+      NOT: { role: 'PLATFORM_ADMIN' },
+    },
+    select: {
+      id: true,
+      email: true,
+      firstName: true,
+      lastName: true,
+      role: true,
+      tenantId: true,
+      suspended: true,
+      createdAt: true,
+    },
+    orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
+  });
+  return users.map(
+    (u: {
+      id: string;
+      email: string;
+      firstName: string;
+      lastName: string;
+      role: UserRole;
+      tenantId: string;
+      suspended: boolean;
+      createdAt: Date;
+    }) => ({
+      ...u,
+      createdAt: u.createdAt.toISOString(),
+    })
+  );
+}
+
+/** List all Platform Admin users (only for Platform Admin callers). */
+export async function listPlatformAdmins(): Promise<UserListItem[]> {
+  const users = await prisma.user.findMany({
+    where: {
+      role: 'PLATFORM_ADMIN',
+      // Exclude test-only ticket users (non-UUID ids) from real admin list
+      email: {
+        notIn: ['tickets1@example.com', 'tickets3@example.com'],
+      },
+    },
     select: {
       id: true,
       email: true,

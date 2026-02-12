@@ -7,7 +7,7 @@
           v-if="auth.user?.role === 'PLATFORM_ADMIN'"
           v-model="selectedTenantId"
           :label="t('createUser.tenant')"
-          :options="tenantsStore.tenants"
+          :options="tenantSelectOptions"
           option-value="id"
           option-label="name"
           emit-value
@@ -18,12 +18,21 @@
           style="min-width: 220px"
           data-test="select-tenant"
         />
+        <q-input
+          v-model="searchQuery"
+          :placeholder="t('users.searchPlaceholder')"
+          dense
+          outlined
+          clearable
+          debounce="300"
+          style="min-width: 330px"
+        />
       </div>
       <q-btn
         color="primary"
         :label="t('users.createUser')"
         unelevated
-        :to="{ name: 'create-user' }"
+        @click="openCreateUserDrawer"
         data-test="button-create-user"
       />
     </div>
@@ -44,7 +53,7 @@
 
     <q-table
       v-else-if="users.length"
-      :rows="users"
+      :rows="filteredUsers"
       :columns="columns"
       row-key="id"
       flat
@@ -52,6 +61,27 @@
       :rows-per-page-options="[10, 25, 50]"
       data-test="users-table"
     >
+      <template #header="props">
+        <q-tr :props="props">
+          <q-th
+            v-for="col in props.cols"
+            :key="col.name"
+            :props="props"
+            :class="col.name !== 'actions' ? 'cursor-pointer' : ''"
+            @click="col.name !== 'actions' && props.setSort(col)"
+          >
+            <div class="row items-center no-wrap">
+              <span>{{ col.label }}</span>
+              <q-icon
+                v-if="props.sortBy === col.name"
+                :name="props.descending ? 'arrow_downward' : 'arrow_upward'"
+                size="16px"
+                class="q-ml-xs"
+              />
+            </div>
+          </q-th>
+        </q-tr>
+      </template>
       <template #body-cell-name="props">
         <q-td :props="props">
           {{ props.row.firstName }} {{ props.row.lastName }}
@@ -116,14 +146,33 @@
       <div class="text-body2">{{ t('users.empty') }}</div>
     </q-card>
 
-    <!-- Edit user dialog -->
-    <q-dialog v-model="editDialogOpen" persistent data-test="dialog-edit-user">
-      <q-card style="min-width: 320px">
-        <q-card-section>
-          <div class="text-h6">{{ t('users.edit') }}</div>
-        </q-card-section>
-        <q-card-section class="q-pt-none">
-          <q-form ref="editFormRef" class="q-gutter-md" @submit="saveEdit">
+    <!-- Edit user drawer -->
+    <q-drawer
+      v-model="editDrawerOpen"
+      side="right"
+      overlay
+      bordered
+      behavior="mobile"
+      :width="420"
+      data-test="drawer-edit-user"
+    >
+      <q-scroll-area class="fit">
+        <div class="q-pa-md">
+          <div class="row items-center justify-between q-mb-md">
+            <div class="text-h6">
+              {{ t('users.edit') }}
+            </div>
+            <q-btn
+              flat
+              round
+              dense
+              icon="close"
+              :aria-label="t('submitForm.cancel')"
+              @click="editDrawerOpen = false"
+            />
+          </div>
+
+          <q-form ref="editFormRef" class="q-gutter-md" @submit.prevent="saveEdit">
             <q-input
               v-model="editForm.firstName"
               :label="t('createUser.firstName')"
@@ -153,22 +202,33 @@
               :rules="[(v: string) => !!v || t('validation.required')]"
               data-test="select-edit-role"
             />
-            <q-checkbox v-model="editForm.suspended" :label="t('users.suspended')" data-test="checkbox-suspended" />
+            <q-checkbox
+              v-model="editForm.suspended"
+              :label="t('users.suspended')"
+              data-test="checkbox-suspended"
+            />
+
+            <div class="row q-gutter-sm q-mt-md">
+              <q-btn
+                type="submit"
+                unelevated
+                color="primary"
+                :label="t('submitForm.submit')"
+                :loading="saving"
+                data-test="button-save-edit"
+              />
+              <q-btn
+                flat
+                :label="t('submitForm.cancel')"
+                color="primary"
+                @click="editDrawerOpen = false"
+                data-test="button-cancel-edit"
+              />
+            </div>
           </q-form>
-        </q-card-section>
-        <q-card-actions align="right">
-          <q-btn flat :label="t('submitForm.cancel')" color="primary" v-close-popup data-test="button-cancel-edit" />
-          <q-btn
-            unelevated
-            color="primary"
-            :label="t('submitForm.submit')"
-            :loading="saving"
-            @click="saveEdit"
-            data-test="button-save-edit"
-          />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
+        </div>
+      </q-scroll-area>
+    </q-drawer>
 
     <!-- Delete confirm -->
     <q-dialog v-model="deleteDialogOpen" persistent data-test="dialog-delete-user">
@@ -194,35 +254,92 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted } from 'vue';
+import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue';
+import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
+import { useUiStore } from '@/stores/ui';
 import { useTenantsStore } from '@/stores/tenants';
 import { usersApi, type UserListItem, type UpdateUserRequest } from '@/api/users.api';
 import type { UserRole } from '@/api/auth.api';
 
 const { t } = useI18n();
+const $q = useQuasar();
 const auth = useAuthStore();
+const ui = useUiStore();
 const tenantsStore = useTenantsStore();
+
+const PLATFORM_OPTION_ID = '__platform_admins__';
 
 const users = ref<UserListItem[]>([]);
 const loading = ref(false);
 const error = ref<string | null>(null);
 const selectedTenantId = ref<string | null>(null);
-const editDialogOpen = ref(false);
+const editDrawerOpen = ref(false);
 const editFormRef = ref<{ validate: () => boolean } | null>(null);
 const saving = ref(false);
 const deleteDialogOpen = ref(false);
 const userToDelete = ref<UserListItem | null>(null);
 const deleting = ref(false);
 
-const columns = [
-  { name: 'name', label: () => t('users.name'), field: (row: UserListItem) => `${row.firstName} ${row.lastName}`, align: 'left' as const },
-  { name: 'email', label: () => t('createUser.email'), field: 'email', align: 'left' as const },
-  { name: 'role', label: () => t('createUser.role'), field: 'role', align: 'left' as const },
-  { name: 'suspended', label: () => t('users.suspended'), field: 'suspended', align: 'center' as const },
-  { name: 'actions', label: '', field: () => '', align: 'right' as const },
-];
+// Global search (name / email)
+const searchQuery = ref('');
+
+const columns = computed(() => [
+  {
+    name: 'name',
+    label: t('users.name'),
+    field: (row: UserListItem) => `${row.firstName} ${row.lastName}`,
+    align: 'left' as const,
+    sortable: true,
+  },
+  {
+    name: 'email',
+    label: t('createUser.email'),
+    field: 'email',
+    align: 'left' as const,
+    sortable: true,
+  },
+  {
+    name: 'role',
+    label: t('createUser.role'),
+    field: 'role',
+    align: 'left' as const,
+    sortable: true,
+  },
+  {
+    name: 'suspended',
+    label: t('users.suspended'),
+    field: 'suspended',
+    align: 'center' as const,
+    sortable: true,
+  },
+  {
+    name: 'actions',
+    label: '',
+    field: () => '',
+    align: 'right' as const,
+  },
+]);
+
+const tenantSelectOptions = computed(() => {
+  if (auth.user?.role !== 'PLATFORM_ADMIN') return tenantsStore.tenants;
+  return [
+    { id: PLATFORM_OPTION_ID, name: t('users.platformAdminsOption') },
+    ...tenantsStore.tenants,
+  ];
+});
+
+const filteredUsers = computed(() =>
+  users.value.filter((u) => {
+    if (!searchQuery.value) return true;
+    const term = searchQuery.value.toLowerCase();
+    const fullName = `${u.firstName} ${u.lastName}`.toLowerCase();
+    const email = u.email.toLowerCase();
+    if (!fullName.includes(term) && !email.includes(term)) return false;
+    return true;
+  })
+);
 
 function roleLabel(role: UserRole): string {
   const key = role === 'PLATFORM_ADMIN' ? 'createUser.rolePlatformAdmin' : role === 'SCHOOL_ADMIN' ? 'createUser.roleSchoolAdmin' : role === 'PROFESSOR' ? 'createUser.roleProfessor' : 'createUser.roleStudent';
@@ -242,21 +359,30 @@ const editRoleOptions = computed(() => {
 });
 
 const effectiveTenantId = computed(() => {
-  if (auth.user?.role === 'PLATFORM_ADMIN') return selectedTenantId.value;
+  if (auth.user?.role === 'PLATFORM_ADMIN') {
+    // When special "Platform Admin users" option is selected, we don't use tenantId
+    if (selectedTenantId.value === PLATFORM_OPTION_ID) return null;
+    return selectedTenantId.value;
+  }
   return auth.tenantId ?? null;
 });
 
 async function fetchUsers() {
-  const tenantId = effectiveTenantId.value;
-  if (!tenantId) {
-    users.value = [];
-    return;
-  }
   loading.value = true;
   error.value = null;
   try {
-    const res = await usersApi.list(tenantId);
-    users.value = res.users;
+    if (auth.user?.role === 'PLATFORM_ADMIN' && selectedTenantId.value === PLATFORM_OPTION_ID) {
+      const res = await usersApi.listPlatformAdmins();
+      users.value = res.users;
+    } else {
+      const tenantId = effectiveTenantId.value;
+      if (!tenantId) {
+        users.value = [];
+        return;
+      }
+      const res = await usersApi.list(tenantId);
+      users.value = res.users;
+    }
   } catch (e: unknown) {
     const msg = e && typeof e === 'object' && 'response' in e ? (e as { response?: { data?: { message?: string } } }).response?.data?.message : e instanceof Error ? e.message : t('users.loadError');
     error.value = msg ?? t('users.loadError');
@@ -267,8 +393,11 @@ async function fetchUsers() {
 }
 
 watch(effectiveTenantId, (id) => {
-  if (id) fetchUsers();
-  else users.value = [];
+  if (id !== null || (auth.user?.role === 'PLATFORM_ADMIN' && selectedTenantId.value === PLATFORM_OPTION_ID)) {
+    fetchUsers();
+  } else {
+    users.value = [];
+  }
 });
 
 onMounted(() => {
@@ -277,6 +406,23 @@ onMounted(() => {
     selectedTenantId.value = auth.tenantId ?? null;
   }
   if (effectiveTenantId.value) fetchUsers();
+});
+
+// Refresh list when a new user is created via global drawer
+function handleUserCreated() {
+  // Only refresh if we're already in a state where listing users makes sense
+  if (auth.user?.role === 'PLATFORM_ADMIN' && !selectedTenantId.value) return;
+  void fetchUsers();
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('user-created', handleUserCreated);
+}
+
+onUnmounted(() => {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('user-created', handleUserCreated);
+  }
 });
 
 // Edit
@@ -294,7 +440,7 @@ function openEdit(row: UserListItem) {
   editForm.lastName = row.lastName;
   editForm.role = row.role;
   editForm.suspended = row.suspended;
-  editDialogOpen.value = true;
+  editDrawerOpen.value = true;
 }
 
 async function saveEdit() {
@@ -302,14 +448,21 @@ async function saveEdit() {
   if (!valid || !editingUser.value) return;
   saving.value = true;
   try {
-    await usersApi.update(editingUser.value.id, {
+    const updated = await usersApi.update(editingUser.value.id, {
       firstName: editForm.firstName,
       lastName: editForm.lastName,
       role: editForm.role,
       suspended: editForm.suspended,
     });
-    editDialogOpen.value = false;
+    editDrawerOpen.value = false;
     await fetchUsers();
+    const notify = ($q as any).notify;
+    if (typeof notify === 'function') {
+      notify({
+        type: 'positive',
+        message: t('users.toastUpdated', { email: updated.email }),
+      });
+    }
   } catch (e: unknown) {
     const msg = e && typeof e === 'object' && 'response' in e ? (e as { response?: { data?: { message?: string } } }).response?.data?.message : e instanceof Error ? e.message : '';
     if (msg) error.value = msg;
@@ -336,17 +489,29 @@ function confirmDelete(row: UserListItem) {
 
 async function doDelete() {
   if (!userToDelete.value) return;
+  const email = userToDelete.value.email;
   deleting.value = true;
   try {
     await usersApi.delete(userToDelete.value.id);
     deleteDialogOpen.value = false;
     userToDelete.value = null;
     await fetchUsers();
+    const notify = ($q as any).notify;
+    if (typeof notify === 'function') {
+      notify({
+        type: 'positive',
+        message: t('users.toastDeleted', { email }),
+      });
+    }
   } catch (e: unknown) {
     const msg = e && typeof e === 'object' && 'response' in e ? (e as { response?: { data?: { message?: string } } }).response?.data?.message : e instanceof Error ? e.message : '';
     if (msg) error.value = msg;
   } finally {
     deleting.value = false;
   }
+}
+
+function openCreateUserDrawer() {
+  ui.openCreateUserDrawer();
 }
 </script>

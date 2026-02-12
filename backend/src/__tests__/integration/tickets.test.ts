@@ -7,6 +7,7 @@ const prisma = new PrismaClient();
 
 describe('Tickets API (integration)', () => {
   let tenantId: string;
+  let createdTicketId: string;
 
   beforeAll(async () => {
     const tenant = await prisma.tenant.create({
@@ -67,6 +68,8 @@ describe('Tickets API (integration)', () => {
       createdById: 'user-tickets-1',
       status: 'NEW',
     });
+
+    createdTicketId = res.body.data.id;
   });
 
   it('POST /api/tickets should validate input', async () => {
@@ -103,6 +106,37 @@ describe('Tickets API (integration)', () => {
       .send(payload);
 
     expect(second.status).toBe(429);
+  });
+
+  it('GET /api/tickets should list tickets for tenant with filters', async () => {
+    const res = await request(app)
+      .get('/api/tickets')
+      .set('x-test-tenant-id', tenantId)
+      .set('x-test-user-id', 'user-tickets-1')
+      .set('x-test-role', 'PLATFORM_ADMIN');
+
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body.data)).toBe(true);
+    expect(res.body.data.length).toBeGreaterThan(0);
+    const first = res.body.data[0];
+    expect(first).toHaveProperty('subject');
+    expect(first).toHaveProperty('tenantName');
+    expect(first).toHaveProperty('reporterName');
+  });
+
+  it('PATCH /api/tickets/:id should allow admin to toggle priority', async () => {
+    const res = await request(app)
+      .patch(`/api/tickets/${createdTicketId}`)
+      .set('x-test-tenant-id', tenantId)
+      .set('x-test-user-id', 'user-tickets-1')
+      .set('x-test-role', 'PLATFORM_ADMIN')
+      .send({ isPriority: true });
+
+    expect(res.status).toBe(200);
+    expect(res.body.data).toMatchObject({
+      id: createdTicketId,
+      isPriority: true,
+    });
   });
 });
 

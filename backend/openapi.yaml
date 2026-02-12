@@ -52,9 +52,25 @@ components:
         steps: { type: string, nullable: true }
         expectedActual: { type: string, nullable: true }
         status: { type: string, enum: [NEW, IN_PROGRESS, RESOLVED] }
+        isPriority: { type: boolean }
         tenantId: { type: string, format: uuid }
         createdById: { type: string, format: uuid }
         createdAt: { type: string, format: date-time }
+    TicketListItem:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        subject: { type: string }
+        status: { type: string, enum: [NEW, IN_PROGRESS, RESOLVED] }
+        isPriority: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        tenantId: { type: string, format: uuid }
+        tenantName: { type: string }
+        reporterName: { type: string }
+        reporterEmail: { type: string, format: email }
+        reporterRole:
+          type: string
+          enum: [PLATFORM_ADMIN, SCHOOL_ADMIN, PROFESSOR, STUDENT]
 
 paths:
   /health:
@@ -159,6 +175,27 @@ paths:
         '400': { description: Platform Admin did not provide tenantId }
         '401': { description: Missing or invalid token }
         '403': { description: Caller is not Platform Admin or School Admin }
+
+  /users/platform-admins:
+    get:
+      summary: List all Platform Admin users
+      description: Only callable by Platform Admin. Returns all users with role PLATFORM_ADMIN across all tenants.
+      tags: [Users]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: List of Platform Admin users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserListItem'
+        '401': { description: Missing or invalid token }
+        '403': { description: Caller is not Platform Admin }
 
   /users/{id}:
     parameters:
@@ -454,3 +491,76 @@ paths:
         '400': { description: Validation error }
         '401': { description: Missing or invalid token }
         '429': { description: Too many requests (cooldown not expired) }
+    get:
+      summary: List bug report tickets for current tenant
+      description: Platform/School admins can see all tickets for their tenant, with optional filters.
+      tags: [Tickets]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [NEW, IN_PROGRESS, RESOLVED]
+          required: false
+          description: Optional status filter.
+        - in: query
+          name: priorityOnly
+          schema:
+            type: boolean
+          required: false
+          description: If true, only priority tickets are returned.
+      responses:
+        '200':
+          description: List of tickets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TicketListItem'
+        '400': { description: Validation error }
+        '401': { description: Missing or invalid token }
+        '403': { description: Forbidden }
+  /tickets/{id}:
+    patch:
+      summary: Update ticket status or priority
+      description: Platform/School admins can change status and mark/unmark priority.
+      tags: [Tickets]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [NEW, IN_PROGRESS, RESOLVED]
+                isPriority:
+                  type: boolean
+      responses:
+        '200':
+          description: Updated ticket
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Ticket'
+        '400': { description: Validation error }
+        '401': { description: Missing or invalid token }
+        '403': { description: Forbidden }
+        '404': { description: Ticket not found }

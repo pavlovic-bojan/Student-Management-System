@@ -1,7 +1,8 @@
 import { Router, type Request, type Response, type NextFunction } from 'express';
-import { body } from 'express-validator';
+import { body, query, param } from 'express-validator';
 import { authenticate } from '../../middleware/authenticate';
 import { validateRequest } from '../../middleware/validateRequest';
+import { requireAdminOrSchoolAdmin } from '../../middleware/requireAdminRole';
 import { createTicketsService } from './tickets.service.factory';
 
 export function registerTicketsRoutes(api: Router): void {
@@ -100,6 +101,148 @@ export function registerTicketsRoutes(api: Router): void {
           expectedActual: req.body.expectedActual,
         });
         res.status(201).json({ data: ticket });
+      } catch (e: any) {
+        next(e);
+      }
+    },
+  );
+
+  /**
+   * @swagger
+   * /api/tickets:
+   *   get:
+   *     summary: List bug report tickets for current tenant
+   *     description: Platform/School admins can see all tickets for their tenant, with optional filters.
+   *     tags: [Tickets]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: query
+   *         name: status
+   *         schema:
+   *           type: string
+   *           enum: [NEW, IN_PROGRESS, RESOLVED]
+   *         required: false
+   *         description: Optional status filter.
+   *       - in: query
+   *         name: priorityOnly
+   *         schema:
+   *           type: boolean
+   *         required: false
+   *         description: If true, only priority tickets are returned.
+   *     responses:
+   *       200:
+   *         description: List of tickets
+   *       400:
+   *         description: Validation error
+   *       401:
+   *         description: Missing or invalid token
+   *       403:
+   *         description: Forbidden
+   */
+  router.get(
+    '/',
+    authenticate,
+    requireAdminOrSchoolAdmin,
+    [
+      query('status')
+        .optional()
+        .isIn(['NEW', 'IN_PROGRESS', 'RESOLVED'])
+        .withMessage('Invalid status filter'),
+      query('priorityOnly')
+        .optional()
+        .isBoolean()
+        .withMessage('priorityOnly must be boolean'),
+    ],
+    validateRequest,
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const tenantId = req.tenantId;
+        if (!tenantId) {
+          return res.status(400).json({ message: 'Tenant context is required' });
+        }
+        const status = req.query.status as 'NEW' | 'IN_PROGRESS' | 'RESOLVED' | undefined;
+        const priorityOnly =
+          typeof req.query.priorityOnly !== 'undefined'
+            ? String(req.query.priorityOnly) === 'true'
+            : false;
+
+        const tickets = await service.listTickets(tenantId, { status, priorityOnly });
+        res.status(200).json({ data: tickets });
+      } catch (e) {
+        next(e);
+      }
+    },
+  );
+
+  /**
+   * @swagger
+   * /api/tickets/{id}:
+   *   patch:
+   *     summary: Update ticket status or priority
+   *     description: Platform/School admins can change status and mark/unmark priority.
+   *     tags: [Tickets]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *           format: uuid
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               status:
+   *                 type: string
+   *                 enum: [NEW, IN_PROGRESS, RESOLVED]
+   *               isPriority:
+   *                 type: boolean
+   *     responses:
+   *       200:
+   *         description: Updated ticket
+   *       400:
+   *         description: Validation error
+   *       401:
+   *         description: Missing or invalid token
+   *       403:
+   *         description: Forbidden
+   *       404:
+   *         description: Ticket not found
+   */
+  router.patch(
+    '/:id',
+    authenticate,
+    requireAdminOrSchoolAdmin,
+    [
+      param('id').isString().isUUID().withMessage('Invalid ticket id'),
+      body('status')
+        .optional()
+        .isIn(['NEW', 'IN_PROGRESS', 'RESOLVED'])
+        .withMessage('Invalid ticket status'),
+      body('isPriority')
+        .optional()
+        .isBoolean()
+        .withMessage('isPriority must be boolean'),
+    ],
+    validateRequest,
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const tenantId = req.tenantId;
+        if (!tenantId) {
+          return res.status(400).json({ message: 'Tenant context is required' });
+        }
+        const ticketId = req.params.id;
+        const updated = await service.updateTicket(tenantId, ticketId, {
+          status: req.body.status,
+          isPriority: typeof req.body.isPriority === 'boolean' ? req.body.isPriority : undefined,
+        });
+        res.status(200).json({ data: updated });
       } catch (e: any) {
         next(e);
       }

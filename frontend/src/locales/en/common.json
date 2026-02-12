@@ -128,12 +128,22 @@
     "cooldown": "You can submit another bug report in {seconds} seconds.",
     "page": "Where did this happen? (page / module)",
     "steps": "Steps to reproduce",
-    "expectedActual": "Expected vs. actual behavior"
+    "expectedActual": "Expected vs. actual behavior",
+    "pageTooLong": "Location must be at most 255 characters."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "subtitle": "New notifications that require your attention.",
+    "empty": "No new notifications.",
+    "goToTickets": "Open tickets",
+    "markAll": "Mark all as read"
   },
   "users": {
     "title": "Users",
     "createUser": "Create user",
     "selectTenant": "Select an institution to view users.",
+    "platformAdminsOption": "Platform Admin users",
+    "searchPlaceholder": "Search by name, surname or email",
     "name": "Name",
     "suspended": "Suspended",
     "edit": "Edit",
@@ -142,6 +152,9 @@
     "delete": "Delete",
     "confirmDelete": "Are you sure you want to delete user \"{name}\"?",
     "empty": "No users.",
-    "loadError": "Failed to load users."
+    "loadError": "Failed to load users.",
+    "toastCreated": "User created: {email}",
+    "toastUpdated": "User updated: {email}",
+    "toastDeleted": "User deleted: {email}"
   }
 }

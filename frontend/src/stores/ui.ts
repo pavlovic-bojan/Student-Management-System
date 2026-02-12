@@ -4,6 +4,7 @@ import { ref } from 'vue';
 export const useUiStore = defineStore('ui', () => {
   const leftDrawerOpen = ref(false);
   const submitDrawerOpen = ref(false);
+  const createUserDrawerOpen = ref(false);
 
   function toggleLeftDrawer() {
     leftDrawerOpen.value = !leftDrawerOpen.value;
@@ -21,6 +22,14 @@ export const useUiStore = defineStore('ui', () => {
     submitDrawerOpen.value = false;
   }
 
+  function openCreateUserDrawer() {
+    createUserDrawerOpen.value = true;
+  }
+
+  function closeCreateUserDrawer() {
+    createUserDrawerOpen.value = false;
+  }
+
   return {
     leftDrawerOpen,
     toggleLeftDrawer,
@@ -28,6 +37,9 @@ export const useUiStore = defineStore('ui', () => {
     submitDrawerOpen,
     openSubmitDrawer,
     closeSubmitDrawer,
+    createUserDrawerOpen,
+    openCreateUserDrawer,
+    closeCreateUserDrawer,
   };
 });
 

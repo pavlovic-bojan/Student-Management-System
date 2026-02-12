@@ -25,6 +25,10 @@ export const usersApi = {
     return api.get<{ users: UserListItem[] }>('/users', { params }).then((r) => r.data);
   },
 
+  listPlatformAdmins(): Promise<{ users: UserListItem[] }> {
+    return api.get<{ users: UserListItem[] }>('/users/platform-admins').then((r) => r.data);
+  },
+
   update(id: string, data: UpdateUserRequest): Promise<UserListItem> {
     return api.patch<UserListItem>(`/users/${id}`, data).then((r) => r.data);
   },

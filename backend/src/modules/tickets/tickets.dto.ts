@@ -6,3 +6,8 @@ export interface CreateTicketDto {
   expectedActual?: string;
 }
 
+export interface UpdateTicketDto {
+  status?: 'NEW' | 'IN_PROGRESS' | 'RESOLVED';
+  isPriority?: boolean;
+}
+

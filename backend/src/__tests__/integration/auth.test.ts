@@ -263,6 +263,37 @@ describe('Auth & Users API (integration)', () => {
     });
   });
 
+  describe('GET /api/users/platform-admins', () => {
+    it('should return 401 without auth', async () => {
+      const res = await request(app).get('/api/users/platform-admins');
+      expect(res.status).toBe(401);
+    });
+
+    it('should return 403 when caller is SCHOOL_ADMIN', async () => {
+      const res = await request(app)
+        .get('/api/users/platform-admins')
+        .set('x-test-tenant-id', tenantId)
+        .set('x-test-user-id', schoolAdminId)
+        .set('x-test-role', 'SCHOOL_ADMIN');
+      expect(res.status).toBe(403);
+    });
+
+    it('should return 200 and list Platform Admin users when caller is PLATFORM_ADMIN', async () => {
+      const res = await request(app)
+        .get('/api/users/platform-admins')
+        .set('x-test-tenant-id', tenantId)
+        .set('x-test-user-id', platformAdminId)
+        .set('x-test-role', 'PLATFORM_ADMIN');
+      expect(res.status).toBe(200);
+      expect(Array.isArray(res.body.users)).toBe(true);
+      expect(
+        res.body.users.some(
+          (u: any) => u.email === platformAdminEmail && u.role === 'PLATFORM_ADMIN'
+        )
+      ).toBe(true);
+    });
+  });
+
   describe('PATCH /api/users/:id', () => {
     it('should return 401 without auth', async () => {
       const res = await request(app).patch(`/api/users/${studentId}`).send({ firstName: 'Updated' });

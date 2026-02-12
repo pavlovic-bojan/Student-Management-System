@@ -69,6 +69,7 @@ model Ticket {
   steps       String?
   expectedActual String?
   status      TicketStatus @default(NEW)
+  isPriority  Boolean      @default(false)
   tenantId    String
   tenant      Tenant      @relation(fields: [tenantId], references: [id])
   createdById String

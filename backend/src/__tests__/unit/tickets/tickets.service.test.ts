@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TicketsService } from '../../../modules/tickets/tickets.service.refactored';
 import type { ITicketsRepository } from '../../../modules/tickets/tickets.repository.interface';
+import type { TicketListItem } from '../../../modules/tickets/tickets.model';
 
 describe('TicketsService', () => {
   let service: TicketsService;
@@ -12,6 +13,8 @@ describe('TicketsService', () => {
     repo = {
       createTicket: vi.fn(),
       findLastTicketForUser: vi.fn(),
+      listTicketsForTenant: vi.fn(),
+      updateTicket: vi.fn(),
     };
     service = new TicketsService(repo);
   });
@@ -86,6 +89,69 @@ describe('TicketsService', () => {
         description: 'Valid description content',
       }),
     ).rejects.toMatchObject({ statusCode: 429 });
+  });
+
+  it('lists tickets with filters by delegating to repo', async () => {
+    const list: TicketListItem[] = [
+      {
+        id: 't1',
+        subject: 'Bug 1',
+        status: 'NEW',
+        isPriority: false,
+        createdAt: new Date(),
+        tenantId,
+        tenantName: 'Tenant',
+        reporterName: 'User',
+        reporterEmail: 'u@example.com',
+      },
+    ];
+    vi.mocked(repo.listTicketsForTenant).mockResolvedValue(list);
+
+    const result = await service.listTickets(tenantId, { status: 'NEW', priorityOnly: true });
+
+    expect(repo.listTicketsForTenant).toHaveBeenCalledWith(tenantId, {
+      status: 'NEW',
+      priorityOnly: true,
+    });
+    expect(result).toBe(list);
+  });
+
+  it('updateTicket rejects when nothing to update', async () => {
+    await expect(service.updateTicket(tenantId, 't1', {})).rejects.toMatchObject({
+      statusCode: 400,
+    });
+  });
+
+  it('updateTicket rejects invalid status', async () => {
+    await expect(
+      // @ts-expect-error invalid status for test
+      service.updateTicket(tenantId, 't1', { status: 'INVALID' }),
+    ).rejects.toMatchObject({ statusCode: 400 });
+  });
+
+  it('updateTicket delegates to repo when payload is valid', async () => {
+    const ticket = {
+      id: 't1',
+      tenantId,
+      subject: 'Bug',
+      description: 'Desc',
+      status: 'IN_PROGRESS' as const,
+      isPriority: true,
+      createdById: userId,
+      createdAt: new Date(),
+    };
+    vi.mocked(repo.updateTicket).mockResolvedValue(ticket);
+
+    const result = await service.updateTicket(tenantId, 't1', {
+      status: 'IN_PROGRESS',
+      isPriority: true,
+    });
+
+    expect(repo.updateTicket).toHaveBeenCalledWith(tenantId, 't1', {
+      status: 'IN_PROGRESS',
+      isPriority: true,
+    });
+    expect(result).toBe(ticket);
   });
 });
 

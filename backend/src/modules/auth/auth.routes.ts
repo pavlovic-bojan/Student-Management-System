@@ -62,6 +62,40 @@ export function registerAuthRoutes(api: Router): void {
 
   /**
    * @swagger
+   * /api/users/platform-admins:
+   *   get:
+   *     summary: List all Platform Admin users
+   *     description: Only callable by Platform Admin. Returns all users with role PLATFORM_ADMIN across all tenants.
+   *     tags: [Auth, Users]
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: List of Platform Admin users
+   *       401:
+   *         description: Missing or invalid token
+   *       403:
+   *         description: Caller is not Platform Admin
+   */
+  router.get(
+    '/users/platform-admins',
+    authenticate,
+    requireAdminOrSchoolAdmin,
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        if (req.user!.role !== 'PLATFORM_ADMIN') {
+          return next(new ApiError('Only Platform Admin can list Platform Admin users', 403));
+        }
+        const users = await authService.listPlatformAdmins();
+        res.json({ users });
+      } catch (e: any) {
+        next(e);
+      }
+    }
+  );
+
+  /**
+   * @swagger
    * /api/users/{id}:
    *   patch:
    *     summary: Update user (edit, suspend)

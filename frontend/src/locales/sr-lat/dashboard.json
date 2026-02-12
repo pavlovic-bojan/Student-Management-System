@@ -1,22 +1,28 @@
 {
   "tickets": "Tiketi",
+  "ticketsSubtitle": "Prijave bagova koje su poslali korisnici",
   "statusNew": "Novi",
   "statusInProgress": "U toku",
+  "statusResolved": "Rešeni",
   "statusPriority": "Prioritetni",
-  "plannedWorkToday": "Planirani radovi danas",
-  "addPhoto": "Dodaj fotografiju",
-  "submitTicket": "Pošalji prijavu",
+  "ticketsColumnTitle": "Naslov prijave",
+  "ticketsColumnReporter": "Prijavio",
+  "ticketsColumnTenant": "Institucija",
+  "ticketsColumnCreatedAt": "Datum prijave",
+  "ticketsColumnStatus": "Status",
+  "ticketsColumnPriority": "Prioritet",
+  "ticketsPlatformScope": "Platforma",
   "submitForm": {
-    "title": "Pošalji prijavu",
-    "subject": "Naslov",
-    "description": "Opis",
+    "title": "Prijavi bag",
+    "subject": "Naslov prijave",
+    "description": "Dodatne napomene",
     "submit": "Pošalji",
     "cancel": "Otkaži"
   },
   "validation": {
     "required": "Obavezno",
-    "bugSubjectLength": "Naslov mora imati između 5 i 200 karaktera.",
-    "bugDescriptionLength": "Opis mora imati između 10 i 2000 karaktera.",
+    "bugSubjectLength": "Naslov prijave mora imati između 5 i 200 karaktera.",
+    "bugDescriptionLength": "Dodatne napomene moraju imati između 10 i 2000 karaktera.",
     "bugStepsLength": "Koraci moraju imati između 5 i 4000 karaktera.",
     "bugExpectedActualLength": "Očekivano vs. realno mora imati između 5 i 4000 karaktera."
   }

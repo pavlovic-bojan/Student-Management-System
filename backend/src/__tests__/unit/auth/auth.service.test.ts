@@ -213,13 +213,46 @@ describe('auth.service', () => {
 
       const result = await authService.listUsers('t1');
       expect(prisma.user.findMany).toHaveBeenCalledWith({
-        where: { tenantId: 't1' },
+        where: { tenantId: 't1', NOT: { role: 'PLATFORM_ADMIN' } },
         select: expect.any(Object),
         orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
       });
       expect(result).toHaveLength(1);
       expect(result[0]).toMatchObject({ id: 'u1', email: 'a@test.com', suspended: false });
       expect(result[0].createdAt).toBe(new Date('2025-01-01').toISOString());
+    });
+  });
+
+  describe('listPlatformAdmins', () => {
+    it('should return all Platform Admin users', async () => {
+      const users = [
+        {
+          id: 'pa1',
+          email: 'platform1@test.com',
+          firstName: 'Platform',
+          lastName: 'One',
+          role: 'PLATFORM_ADMIN',
+          tenantId: 't1',
+          suspended: false,
+          createdAt: new Date('2025-01-02'),
+        },
+      ];
+      vi.mocked(prisma.user.findMany).mockResolvedValue(users as any);
+
+      const result = await authService.listPlatformAdmins();
+      expect(prisma.user.findMany).toHaveBeenCalledWith({
+        where: {
+          role: 'PLATFORM_ADMIN',
+          email: {
+            notIn: ['tickets1@example.com', 'tickets3@example.com'],
+          },
+        },
+        select: expect.any(Object),
+        orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
+      });
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({ id: 'pa1', role: 'PLATFORM_ADMIN' });
+      expect(result[0].createdAt).toBe(new Date('2025-01-02').toISOString());
     });
   });
 

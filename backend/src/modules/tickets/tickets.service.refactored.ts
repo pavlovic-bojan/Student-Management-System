@@ -1,6 +1,6 @@
 import type { ITicketsRepository } from './tickets.repository.interface';
-import type { TicketModel } from './tickets.model';
-import type { CreateTicketDto } from './tickets.dto';
+import type { TicketModel, TicketListItem } from './tickets.model';
+import type { CreateTicketDto, UpdateTicketDto } from './tickets.dto';
 import { ApiError } from '../../middleware/errorHandler';
 
 const COOLDOWN_SECONDS = 60;
@@ -36,6 +36,29 @@ export class TicketsService {
       steps: dto.steps,
       expectedActual: dto.expectedActual,
     });
+  }
+
+  async listTickets(
+    tenantId: string,
+    filters: { status?: 'NEW' | 'IN_PROGRESS' | 'RESOLVED'; priorityOnly?: boolean },
+  ): Promise<TicketListItem[]> {
+    return this.repo.listTicketsForTenant(tenantId, filters);
+  }
+
+  async updateTicket(
+    tenantId: string,
+    ticketId: string,
+    dto: UpdateTicketDto,
+  ): Promise<TicketModel> {
+    if (!dto.status && typeof dto.isPriority !== 'boolean') {
+      throw new ApiError('Nothing to update', 400);
+    }
+
+    if (dto.status && !['NEW', 'IN_PROGRESS', 'RESOLVED'].includes(dto.status)) {
+      throw new ApiError('Invalid ticket status', 400);
+    }
+
+    return this.repo.updateTicket(tenantId, ticketId, dto);
   }
 }
 

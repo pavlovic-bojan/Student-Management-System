@@ -5,12 +5,17 @@
     </div>
 
     <q-card flat bordered class="q-pa-md">
-      <q-form class="q-gutter-md" @submit.prevent="onSubmit">
+      <q-form ref="formRef" class="q-gutter-md" @submit.prevent="onSubmit">
         <q-input
           v-model="form.subject"
           :label="t('submitForm.subject')"
           outlined
           dense
+          :rules="[
+            (v: string) => !!(v && v.trim()) || t('validation.required'),
+            (v: string) =>
+              !v || (v.trim().length >= 5 && v.trim().length <= 200) || t('validation.bugSubjectLength'),
+          ]"
           data-test="bug-subject"
         />
         <q-input
@@ -18,6 +23,13 @@
           :label="t('bugReport.page')"
           outlined
           dense
+          :rules="[
+            (v: string) => !!(v && v.trim()) || t('validation.required'),
+            (v: string) => {
+              const len = (v || '').trim().length;
+              return len <= 255 || t('bugReport.pageTooLong');
+            },
+          ]"
           data-test="bug-page"
         />
         <q-input
@@ -27,6 +39,13 @@
           dense
           type="textarea"
           rows="4"
+          :rules="[
+            (v: string) => !!(v && v.trim()) || t('validation.required'),
+            (v: string) => {
+              const len = (v || '').trim().length;
+              return (len >= 5 && len <= 4000) || t('validation.bugStepsLength');
+            },
+          ]"
           data-test="bug-steps"
         />
         <q-input
@@ -36,6 +55,13 @@
           dense
           type="textarea"
           rows="4"
+          :rules="[
+            (v: string) => !!(v && v.trim()) || t('validation.required'),
+            (v: string) => {
+              const len = (v || '').trim().length;
+              return (len >= 5 && len <= 4000) || t('validation.bugExpectedActualLength');
+            },
+          ]"
           data-test="bug-expected-actual"
         />
         <q-input
@@ -45,6 +71,13 @@
           dense
           type="textarea"
           rows="3"
+          :rules="[
+            (v: string) => !!(v && v.trim()) || t('validation.required'),
+            (v: string) => {
+              const len = (v || '').trim().length;
+              return (len >= 10 && len <= 2000) || t('validation.bugDescriptionLength');
+            },
+          ]"
           data-test="bug-description"
         />
 
@@ -58,12 +91,12 @@
         </q-banner>
 
         <q-banner
-          v-if="errorMessage"
+          v-if="submitError"
           class="bg-negative text-white"
           rounded
           data-test="bug-error-banner"
         >
-          {{ errorMessage }}
+          {{ submitError }}
         </q-banner>
 
         <div class="row q-gutter-sm">
@@ -92,7 +125,6 @@
 import { reactive, ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import axios from 'axios';
 import { ticketsApi } from '@/api/tickets.api';
 
 const COOLDOWN_SECONDS = 60;
@@ -109,8 +141,9 @@ const form = reactive({
   description: '',
 });
 
-const submitting = reactive({ value: false });
-const errorMessage = ref<string | null>(null);
+const formRef = ref<any | null>(null);
+const submitting = ref(false);
+const submitError = ref<string | null>(null);
 
 const lastSentAt = (() => {
   const raw = typeof window !== 'undefined' ? window.localStorage.getItem(STORAGE_KEY) : null;
@@ -124,7 +157,7 @@ const cooldownRemaining = computed(() => {
   return diff > 0 ? diff : 0;
 });
 
-const isSubmitDisabled = computed(() => cooldownRemaining.value > 0);
+const isSubmitDisabled = computed(() => cooldownRemaining.value > 0 || submitting.value);
 
 function saveLastSent() {
   const now = Date.now();
@@ -133,49 +166,19 @@ function saveLastSent() {
   }
 }
 
-function validateForm(): boolean {
-  const errors: string[] = [];
-  const subject = form.subject.trim();
-  const description = form.description.trim();
-  const steps = form.steps.trim();
-  const expectedActual = form.expectedActual.trim();
-
-  if (!subject || subject.length < 5 || subject.length > 200) {
-    errors.push(t('validation.bugSubjectLength'));
-  }
-
-  if (!description || description.length < 10 || description.length > 2000) {
-    errors.push(t('validation.bugDescriptionLength'));
-  }
-
-  if (!steps || steps.length < 5 || steps.length > 4000) {
-    errors.push(t('validation.bugStepsLength'));
-  }
-
-  if (!expectedActual || expectedActual.length < 5 || expectedActual.length > 4000) {
-    errors.push(t('validation.bugExpectedActualLength'));
-  }
-
-  if (errors.length > 0) {
-    errorMessage.value = errors.join('\n');
-    return false;
-  }
-
-  errorMessage.value = null;
-  return true;
-}
-
 async function onSubmit() {
-  if (!validateForm()) {
-    return;
-  }
+  submitError.value = null;
+
+  if (!formRef.value) return;
+  const valid = await formRef.value.validate();
+  if (!valid) return;
+
   if (cooldownRemaining.value > 0) {
-    errorMessage.value = t('bugReport.cooldown', { seconds: cooldownRemaining.value });
+    submitError.value = t('bugReport.cooldown', { seconds: cooldownRemaining.value });
     return;
   }
 
   submitting.value = true;
-  errorMessage.value = null;
   try {
     await ticketsApi.create({
       subject: form.subject,
@@ -185,10 +188,6 @@ async function onSubmit() {
       expectedActual: form.expectedActual || undefined,
     });
     saveLastSent();
-    $q.notify({
-      type: 'positive',
-      message: t('bugReport.submitted'),
-    });
     form.subject = '';
     form.page = '';
     form.steps = '';
@@ -196,14 +195,13 @@ async function onSubmit() {
     form.description = '';
     goBack();
   } catch (e) {
-    const message = t('bugReport.submitError');
-    errorMessage.value = message;
+    submitError.value = t('bugReport.submitError');
   } finally {
     submitting.value = false;
   }
 }
 
 function goBack() {
-  router.push({ name: 'dashboard' });
+  router.push({ name: 'tickets' });
 }
 </script>

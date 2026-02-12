@@ -28,8 +28,13 @@ const routes: RouteRecordRaw[] = [
     children: [
       {
         path: '',
-        name: 'dashboard',
-        component: () => import('@/pages/DashboardPage.vue'),
+        name: 'tickets',
+        component: () => import('@/pages/TicketsPage.vue'),
+      },
+      {
+        path: 'notifications',
+        name: 'notifications',
+        component: () => import('@/pages/NotificationsPage.vue'),
       },
       {
         path: 'students',
@@ -76,12 +81,6 @@ const routes: RouteRecordRaw[] = [
         name: 'users',
         component: () => import('@/pages/users/UsersPage.vue'),
         beforeEnter: requireAdminOrSchoolAdmin,
-      },
-      {
-        path: 'users/create',
-        name: 'create-user',
-        component: () => import('@/pages/users/CreateUserPage.vue'),
-        beforeEnter: requireCanCreateUser,
       },
     ],
   },

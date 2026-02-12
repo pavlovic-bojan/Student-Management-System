@@ -1,22 +1,28 @@
 {
   "tickets": "Тикети",
+  "ticketsSubtitle": "Пријаве багова које су послали корисници",
   "statusNew": "Нови",
   "statusInProgress": "У току",
+  "statusResolved": "Решени",
   "statusPriority": "Приоритетни",
-  "plannedWorkToday": "Планирани радови данас",
-  "addPhoto": "Додај фотографију",
-  "submitTicket": "Пошаљи пријаву",
+  "ticketsColumnTitle": "Наслов пријаве",
+  "ticketsColumnReporter": "Пријавио",
+  "ticketsColumnTenant": "Институција",
+  "ticketsColumnCreatedAt": "Датум пријаве",
+  "ticketsColumnStatus": "Статус",
+  "ticketsColumnPriority": "Приоритет",
+  "ticketsPlatformScope": "Платформа",
   "submitForm": {
-    "title": "Пошаљи пријаву",
-    "subject": "Наслов",
-    "description": "Опис",
+    "title": "Пријави баг",
+    "subject": "Наслов пријаве",
+    "description": "Додатне напомене",
     "submit": "Пошаљи",
     "cancel": "Откажи"
   },
   "validation": {
     "required": "Обавезно",
-    "bugSubjectLength": "Наслов мора имати између 5 и 200 карактера.",
-    "bugDescriptionLength": "Опис мора имати између 10 и 2000 карактера.",
+    "bugSubjectLength": "Наслов пријаве мора имати између 5 и 200 карактера.",
+    "bugDescriptionLength": "Додатне напомене морају имати између 10 и 2000 карактера.",
     "bugStepsLength": "Кораци морају имати између 5 и 4000 карактера.",
     "bugExpectedActualLength": "Очекивано vs. реално мора имати између 5 и 4000 карактера."
   }

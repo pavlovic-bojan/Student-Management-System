@@ -29,7 +29,7 @@ export function requireAdminOrSchoolAdmin(
   if (role === 'PLATFORM_ADMIN' || role === 'SCHOOL_ADMIN') {
     next();
   } else {
-    next({ name: 'dashboard' });
+    next({ name: 'tickets' });
   }
 }
 
@@ -48,7 +48,7 @@ export function requireCanCreateUser(
   if (role === 'PLATFORM_ADMIN' || role === 'SCHOOL_ADMIN' || role === 'PROFESSOR') {
     next();
   } else {
-    next({ name: 'dashboard' });
+    next({ name: 'tickets' });
   }
 }
 

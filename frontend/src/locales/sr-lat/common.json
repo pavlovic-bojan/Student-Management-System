@@ -128,12 +128,22 @@
     "cooldown": "Možete poslati novu prijavu za {seconds} sekundi.",
     "page": "Gde se bug pojavio (stranica / modul)",
     "steps": "Koraci za reprodukciju",
-    "expectedActual": "Očekivano vs. realno ponašanje"
+    "expectedActual": "Očekivano vs. realno ponašanje",
+    "pageTooLong": "Lokacija mora imati najviše 255 karaktera."
+  },
+  "notifications": {
+    "title": "Obaveštenja",
+    "subtitle": "Nova obaveštenja koja zahtevaju vašu pažnju.",
+    "empty": "Nema novih obaveštenja.",
+    "goToTickets": "Otvori tikete",
+    "markAll": "Označi sve kao pročitano"
   },
   "users": {
     "title": "Korisnici",
     "createUser": "Kreiraj korisnika",
     "selectTenant": "Izaberite instituciju da vidite korisnike.",
+    "platformAdminsOption": "Platform Admin korisnici",
+    "searchPlaceholder": "Pretraga po imenu, prezimenu ili email adresi",
     "name": "Ime i prezime",
     "suspended": "Suspendovan",
     "edit": "Izmeni",
@@ -142,6 +152,9 @@
     "delete": "Obriši",
     "confirmDelete": "Da li ste sigurni da želite da obrišete korisnika \"{name}\"?",
     "empty": "Nema korisnika.",
-    "loadError": "Greška pri učitavanju korisnika."
+    "loadError": "Greška pri učitavanju korisnika.",
+    "toastCreated": "Korisnik je kreiran: {email}",
+    "toastUpdated": "Korisnik je izmenjen: {email}",
+    "toastDeleted": "Korisnik je obrisan: {email}"
   }
 }

@@ -36,18 +36,18 @@
           <q-item-section>{{ t('nav.tickets') }}</q-item-section>
         </q-item>
 
-        <q-item clickable v-ripple data-test="nav-notifications" class="app-nav-item">
+        <q-item
+          clickable
+          v-ripple
+          :to="{ name: 'notifications' }"
+          active-class="app-nav-item-active"
+          data-test="nav-notifications"
+          class="app-nav-item"
+        >
           <q-item-section avatar>
             <q-icon name="notifications" />
           </q-item-section>
           <q-item-section>{{ t('nav.notifications') }}</q-item-section>
-        </q-item>
-
-        <q-item clickable v-ripple data-test="nav-documents" class="app-nav-item">
-          <q-item-section avatar>
-            <q-icon name="description" />
-          </q-item-section>
-          <q-item-section>{{ t('nav.documents') }}</q-item-section>
         </q-item>
 
         <q-item clickable v-ripple to="/finance" active-class="app-nav-item-active" data-test="nav-finance" class="app-nav-item">
@@ -55,13 +55,6 @@
             <q-icon name="payments" />
           </q-item-section>
           <q-item-section>{{ t('nav.finance') }}</q-item-section>
-        </q-item>
-
-        <q-item clickable v-ripple data-test="nav-calendar" class="app-nav-item">
-          <q-item-section avatar>
-            <q-icon name="event" />
-          </q-item-section>
-          <q-item-section>{{ t('nav.calendar') }}</q-item-section>
         </q-item>
 
         <q-item clickable v-ripple to="/students" active-class="app-nav-item-active" data-test="nav-students" class="app-nav-item">
@@ -115,7 +108,7 @@
         </q-item>
 
         <q-item
-          v-if="auth.user?.role === 'PLATFORM_ADMIN' || auth.user?.role === 'SCHOOL_ADMIN' || auth.user?.role === 'PROFESSOR'"
+          v-if="auth.user?.role === 'SCHOOL_ADMIN' || auth.user?.role === 'PROFESSOR'"
           clickable
           v-ripple
           to="/users/create"
@@ -194,11 +187,21 @@
             flat
             round
             dense
-            icon="notifications"
             :aria-label="t('header.notifications')"
             class="q-ml-xs"
             data-test="button-notifications"
+            @click="onNotificationsClick"
           >
+            <q-icon name="notifications" />
+            <q-badge
+              v-if="notifications.unreadCount > 0"
+              color="negative"
+              floating
+              rounded
+              transparent
+            >
+              {{ notifications.unreadCount }}
+            </q-badge>
             <q-tooltip>{{ t('header.notifications') }}</q-tooltip>
           </q-btn>
 
@@ -308,6 +311,132 @@
       </q-scroll-area>
     </q-drawer>
 
+    <!-- Right drawer: Create user (used from Users page) -->
+    <q-drawer
+      v-model="ui.createUserDrawerOpen"
+      side="right"
+      overlay
+      bordered
+      behavior="mobile"
+      :width="480"
+      data-test="drawer-create-user"
+    >
+      <q-scroll-area class="fit">
+        <div class="q-pa-md">
+          <div class="row items-center justify-between q-mb-md">
+            <div class="text-h6">
+              {{
+                auth.user?.role === 'PROFESSOR'
+                  ? t('createUser.titleStudent')
+                  : t('createUser.title')
+              }}
+            </div>
+            <q-btn
+              flat
+              round
+              dense
+              icon="close"
+              :aria-label="t('submitForm.cancel')"
+              @click="ui.closeCreateUserDrawer"
+            />
+          </div>
+
+          <q-form class="q-gutter-md" @submit.prevent="onCreateUserSubmit" data-test="form-create-user">
+            <q-input
+              v-model="createUserForm.firstName"
+              :label="t('createUser.firstName')"
+              outlined
+              dense
+              :rules="[(v: string) => !!v || t('validation.required')]"
+              data-test="input-firstName"
+            />
+            <q-input
+              v-model="createUserForm.lastName"
+              :label="t('createUser.lastName')"
+              outlined
+              dense
+              :rules="[(v: string) => !!v || t('validation.required')]"
+              data-test="input-lastName"
+            />
+            <q-input
+              v-model="createUserForm.email"
+              :label="t('createUser.email')"
+              type="email"
+              outlined
+              dense
+              :rules="[(v: string) => !!v || t('validation.required')]"
+              data-test="input-email"
+            />
+            <q-select
+              v-if="!isProfessor"
+              v-model="createUserForm.role"
+              :label="t('createUser.role')"
+              :options="createUserRoleOptions"
+              option-label="label"
+              option-value="value"
+              emit-value
+              map-options
+              outlined
+              dense
+              :rules="[(v: string) => !!v || t('validation.required')]"
+              data-test="select-role"
+            />
+            <q-select
+              v-if="showCreateUserTenantSelect"
+              v-model="createUserForm.tenantId"
+              :label="t('createUser.tenant')"
+              :options="createUserTenantOptions"
+              option-value="id"
+              option-label="name"
+              emit-value
+              map-options
+              outlined
+              dense
+              :loading="tenantsStore.loading"
+              :rules="tenantFieldRules"
+              data-test="select-tenant"
+            />
+            <q-input
+              v-model="createUserForm.password"
+              :label="t('createUser.password')"
+              type="password"
+              outlined
+              dense
+              :rules="[
+                (v: string) => !!v || t('validation.required'),
+                (v: string) => !v || v.length >= 8 || 'Min 8 znakova',
+              ]"
+              data-test="input-password"
+            />
+
+            <q-banner
+              v-if="createUserError"
+              class="bg-negative text-white rounded-borders q-mb-md"
+              dense
+            >
+              {{ createUserError }}
+            </q-banner>
+            <div class="row q-gutter-sm">
+              <q-btn
+                type="submit"
+                color="primary"
+                :label="t('createUser.submit')"
+                :loading="createUserLoading"
+                :disable="createUserLoading"
+                data-test="button-submit-create-user"
+              />
+              <q-btn
+                flat
+                :label="t('createUser.back')"
+                data-test="button-back-create-user"
+                @click="ui.closeCreateUserDrawer"
+              />
+            </div>
+          </q-form>
+        </div>
+      </q-scroll-area>
+    </q-drawer>
+
   </q-layout>
 </template>
 
@@ -319,6 +448,8 @@ import { useI18n } from 'vue-i18n';
 import { useUiStore } from '@/stores/ui';
 import { useAuthStore } from '@/stores/auth';
 import { useTenantsStore } from '@/stores/tenants';
+import { authApi } from '@/api/auth.api';
+import { useNotificationsStore } from '@/stores/notifications';
 import DarkModeToggle from '@/components/common/DarkModeToggle.vue';
 
 const LOCALE_STORAGE_KEY = 'locale';
@@ -329,6 +460,7 @@ const { t, locale: i18nLocale } = useI18n();
 const ui = useUiStore();
 const auth = useAuthStore();
 const tenantsStore = useTenantsStore();
+const notifications = useNotificationsStore();
 
 const tenantOptions = computed(() =>
   auth.tenantId
@@ -415,6 +547,14 @@ onMounted(() => {
   if (saved && ['en', 'sr-lat', 'sr-cyr'].includes(saved)) {
     i18nLocale.value = saved;
   }
+
+  // Start simple polling for new relevant tickets (bug reports) for admins
+  if (auth.user?.role === 'PLATFORM_ADMIN' || auth.user?.role === 'SCHOOL_ADMIN') {
+    void notifications.pollTickets();
+    setInterval(() => {
+      void notifications.pollTickets();
+    }, 30000);
+  }
 });
 
 async function handleLogout() {
@@ -427,11 +567,144 @@ const submitForm = reactive({
   description: '',
 });
 
+const isPlatformAdmin = computed(() => auth.user?.role === 'PLATFORM_ADMIN');
+const isProfessor = computed(() => auth.user?.role === 'PROFESSOR');
+
+const createUserTenantOptions = computed(() => {
+  if (isPlatformAdmin.value) return tenantsStore.tenants;
+  if (isProfessor.value) {
+    const ids = auth.user?.tenantIds ?? (auth.user?.tenantId ? [auth.user.tenantId] : []);
+    return tenantsStore.tenants.filter((t) => ids.includes(t.id));
+  }
+  return [];
+});
+
+const createUserForm = reactive({
+  firstName: '',
+  lastName: '',
+  email: '',
+  role: null as import('@/api/auth.api').UserRole | null,
+  tenantId: null as string | null,
+  password: '',
+});
+
+const showCreateUserTenantSelect = computed(() => {
+  // Ako trenutni korisnik (creator) ima rolu PLATFORM_ADMIN i bira da kreira PLATFORM_ADMIN,
+  // ne prikazujemo izbor institucije u UI (tenant se postavlja automatski).
+  if (isPlatformAdmin.value && createUserForm.role === 'PLATFORM_ADMIN') {
+    return false;
+  }
+  if (isPlatformAdmin.value) return true;
+  if (isProfessor.value) {
+    const ids = auth.user?.tenantIds ?? (auth.user?.tenantId ? [auth.user.tenantId] : []);
+    return ids.length > 1;
+  }
+  return false;
+});
+
+const tenantFieldRules = computed(() => {
+  // Za PLATFORM_ADMIN rolu ne zahtevamo izbor institucije u formi
+  if (isPlatformAdmin.value && createUserForm.role === 'PLATFORM_ADMIN') {
+    return [];
+  }
+  return [(v: string) => !!v || t('validation.required')];
+});
+
+const createUserRoleOptions = computed(() => {
+  const base = [
+    { label: t('createUser.roleSchoolAdmin'), value: 'SCHOOL_ADMIN' },
+    { label: t('createUser.roleProfessor'), value: 'PROFESSOR' },
+    { label: t('createUser.roleStudent'), value: 'STUDENT' },
+  ];
+  if (auth.user?.role === 'PLATFORM_ADMIN') {
+    return [{ label: t('createUser.rolePlatformAdmin'), value: 'PLATFORM_ADMIN' }, ...base];
+  }
+  return base;
+});
+
+// Kada trenutni korisnik (platform admin) izabere da kreira PLATFORM_ADMIN,
+// automatski setujemo tenantId na njegov tenant (da backend ostane konzistentan),
+// ali bez forsiranja izbora institucije u UI.
+watch(
+  () => createUserForm.role,
+  (newRole) => {
+    if (isPlatformAdmin.value && newRole === 'PLATFORM_ADMIN') {
+      createUserForm.tenantId = auth.tenantId ?? null;
+    }
+  }
+);
+
+const createUserLoading = ref(false);
+const createUserError = ref<string | null>(null);
+
 function onSubmitForm() {
   // TODO: call tickets API when backend endpoint exists
   ui.closeSubmitDrawer();
   submitForm.subject = '';
   submitForm.description = '';
+}
+
+function onNotificationsClick() {
+  router.push({ name: 'notifications' });
+}
+
+async function onCreateUserSubmit() {
+  if (!auth.user) return;
+
+  const tenantId = isPlatformAdmin.value
+    ? createUserForm.tenantId
+    : isProfessor.value
+      ? createUserForm.tenantId
+      : auth.tenantId;
+  const role = isProfessor.value ? 'STUDENT' : createUserForm.role;
+
+  if (!role || !tenantId) return;
+
+  createUserLoading.value = true;
+  createUserError.value = null;
+
+  try {
+    const email = createUserForm.email;
+    await authApi.register({
+      email,
+      password: createUserForm.password,
+      firstName: createUserForm.firstName,
+      lastName: createUserForm.lastName,
+      role,
+      tenantId,
+    });
+    createUserForm.firstName = '';
+    createUserForm.lastName = '';
+    createUserForm.email = '';
+    createUserForm.role = isProfessor.value ? 'STUDENT' : null;
+    createUserForm.tenantId = isPlatformAdmin.value || isProfessor.value ? null : auth.tenantId;
+    if (isProfessor.value) {
+      const ids = auth.user.tenantIds ?? (auth.user.tenantId ? [auth.user.tenantId] : []);
+      if (ids.length === 1) createUserForm.tenantId = ids[0];
+    }
+    createUserForm.password = '';
+    ui.closeCreateUserDrawer();
+    const notify = ($q as any).notify;
+    if (typeof notify === 'function') {
+      notify({
+        type: 'positive',
+        message: t('users.toastCreated', { email }),
+      });
+    }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('user-created'));
+    }
+  } catch (e: unknown) {
+    const msg =
+      e && typeof e === 'object' && 'response' in e
+        ? (e as { response?: { data?: { message?: string } } }).response?.data?.message
+        : e instanceof Error
+          ? e.message
+          : 'Greška';
+    createUserError.value = msg ?? 'Greška';
+  } finally {
+    createUserLoading.value = false;
+  }
 }
 </script>
 

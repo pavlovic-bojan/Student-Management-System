@@ -1,5 +1,5 @@
 import { createApp } from 'vue';
-import { Quasar } from 'quasar';
+import { Quasar, Notify } from 'quasar';
 import { createPinia } from 'pinia';
 import { i18n } from './i18n';
 import router from './router';
@@ -15,7 +15,7 @@ import './css/tailwind.css';
 const app = createApp(App);
 
 app.use(Quasar, {
-  plugins: { Dark: true },
+  plugins: { Notify },
 });
 
 app.use(createPinia());
