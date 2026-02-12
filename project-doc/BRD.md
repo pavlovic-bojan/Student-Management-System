@@ -166,28 +166,154 @@ There is **no public user registration**. Only authenticated users with the appr
 
 | Creator role      | Can create roles                    | Tenant scope                    | When / UI |
 |-------------------|-------------------------------------|---------------------------------|-----------|
-| **Platform Admin**| Any role (Platform Admin, School Admin, Professor, Student) | Any tenant (creator chooses in UI) | Menu: "Korisnici" (list users) + "Kreiraj korisnika". |
-| **School Admin**  | School Admin, Professor, Student only (cannot create Platform Admin) | Own tenant only                 | Menu: "Korisnici" + "Kreiraj korisnika". |
-| **Professor**     | Student only                        | Only tenants the professor belongs to (if 2+ institutions, professor must choose which tenant the student belongs to) | Menu: only "Kreiraj studenta" (no user list). |
+| **Platform Admin**| Any role (Platform Admin, School Admin, Professor, Student) | Any tenant (creator chooses in UI) | Menu: "Users" (list users) + "Create user" drawer on the right. |
+| **School Admin**  | School Admin, Professor, Student only (cannot create Platform Admin) | Own tenant only                 | Menu: "Users" + "Create user" drawer. |
+| **Professor**     | Student only                        | Only tenants the professor belongs to (if 2+ institutions, professor must choose which tenant the student belongs to) | Menu: only "Create student" drawer (no user list). |
 | **Student**       | —                                   | —                               | Cannot create users. |
 
 #### Rules in short
 
-- **Platform Admin:** Can create any user in any tenant. In the UI they see the "Users" list (with tenant selector) and "Create user".
-- **School Admin:** Can create only School Admin, Professor, and Student, and only in their own institution (tenant). Cannot assign the Platform Admin role. Sees "Users" list (for their school) and "Create user".
-- **Professor:** Can create **only students**, and only for an institution they belong to. If the professor is linked to more than one university (multi-tenant via `UserTenant`), they must **choose** which tenant the new student belongs to in the "Create student" form. In the UI the professor sees only "Create student" (no "Users" list).
-- **Student:** Cannot create users.
+- **Platform Admin:**
+  - Can create any user in any tenant.
+  - In the UI sees the `Users` page with:
+    - A **tenant select** plus a special option **"Platform Admin users"** that shows all Platform Admin accounts (not tied to a single tenant).
+    - A **QTable** with users (full name, email, role, suspended).
+    - A **right-side drawer** for creating users (no separate create page).
+  - When choosing the `PLATFORM_ADMIN` role for a new user:
+    - The UI **does not require** selecting an institution (tenant); the tenant is automatically set to the current Platform Admin's tenant.
+**School Admin:**
+  - Can create only School Admin, Professor and Student, and only within their own tenant.
+  - Cannot assign the Platform Admin role.
+  - Sees the `Users` page for their tenant, with a drawer for creating users.
+**Professor:**
+  - Can create **only students**, and only for tenants they belong to.
+  - If a professor is linked to multiple institutions (`UserTenant`), the form requires choosing the tenant for the new student.
+  - Has no user list; only sees the “Create student” drawer.
+**Student:** Cannot create users.
 
 #### User management (list, edit, suspend, delete)
 
-- **Platform Admin:** Can list users per tenant (tenant selector), and edit, suspend (lock account), and delete any user in the selected tenant. Cannot delete their own account.
-- **School Admin:** Can list, edit, suspend, and delete only users of **their own** tenant (other School Admins, Professors, Students of that school). Cannot edit or delete Platform Admins; cannot delete their own account. Suspend = lock account (suspended users cannot log in).
-- **Professor:** No access to user list or user management; only "Create student" as above.
+- **Platform Admin:**
+  - Can list users per tenant (tenant selector).
+  - Can edit, suspend and delete **any user** in the selected tenant, except themselves (self‑deletion is forbidden).
+  - Can open a special “Platform Admin users” view (QSelect option) that lists all Platform Admin accounts, regardless of tenant.
+  - Uses a **narrow right-side drawer** for editing users, never a modal.
+- **School Admin:**
+  - Can list, edit, suspend and delete only users of **their own** tenant (School Admin, Professor, Student).
+  - Cannot edit or delete Platform Admin accounts; cannot delete their own account.
+  - Suspend = account lock (suspended users cannot log in).
+  - Edit also uses a drawer (not a modal); delete confirmation is done via a **confirmation modal** (QDialog).
+- **Professor:** No access to the user list or user management; only uses the “Create student” drawer.
 - **Student:** No user management.
 
 #### Suspended accounts
 
 - A user can be marked as **suspended** (locked). Suspended users receive an error (e.g. 403 "Account is suspended") on login and cannot use the system until an admin unsuspends them.
+
+---
+
+### 7.2 Bug Reporting and Tickets
+
+The system includes a centralized module for **bug reporting** and ticket lifecycle, implemented as a `Ticket` entity.
+
+#### Who can submit a bug
+
+- **Any authenticated user** (Platform Admin, School Admin, Professor, Student) can submit a bug report / ticket for the current tenant.
+
+#### Fields on the bug report form
+
+- **Subject / Title** – short summary of the problem (required, min/max length).
+- **Description / Additional details** – general description of the problem (required, min/max length).
+- **Page / Location** – where the bug occurred (page or module, max 255 characters).
+- **Steps to reproduce** – steps to reproduce the bug.
+- **Expected vs actual behavior** – what the user expected vs. what actually happened.
+
+The form is implemented as a dedicated `Report bug` page in the central content area, accessible from the user avatar menu (avatar → “Report bug”).
+
+#### Server-side rules and anti-spam
+
+- Each ticket is linked to:
+  - `tenantId` (institution for which the report is submitted),
+  - `createdById` (user who submitted the ticket),
+  - `status` (`NEW`, `IN_PROGRESS`, `RESOLVED`),
+  - `isPriority` (boolean).
+- There is a **rate limit / cooldown per user**:
+  - After a successful bug submission, the user cannot immediately submit another ticket of the same type (server returns 429; the UI shows a cooldown message).
+
+#### Ticket listing and management
+
+- The **“Tickets”** page shows a table of bug reports:
+  - Columns: subject, reporter name, institution/tenant, created at, status, priority.
+  - Filtering:
+    - by status (`NEW`, `IN_PROGRESS`, `RESOLVED`);
+    - “priority only” (isPriority = true).
+  - Clicking a row opens a **right-side drawer** with ticket details:
+    - Admin can change status and toggle priority (star icon / toggle).
+- **Visibility rules:**
+  - **Platform Admin:** sees tickets that are scoped to the platform (e.g. tickets created by Platform Admin users) and/or global platform‑level tickets as defined in this BRD.
+  - **School Admin:** sees tickets only for their own tenant.
+- **Priority tickets:** Platform Admin can mark a ticket as priority (`isPriority = true`); the UI shows a star indicator and allows filtering to priority tickets only.
+
+---
+
+### 7.3 Notifications (Tickets & User Actions)
+
+The system uses two kinds of notifications:
+
+1. **Ticket notifications** – for new bug reports.
+2. **User‑action notifications** – for actions performed on users (create / update / delete).
+
+All notifications are available via:
+
+- The bell icon in the header (badge with count of unread items).
+- The **“Notifications”** page, which lists both ticket and user‑action notifications.
+
+#### 7.3.1 Ticket notifications
+
+- The backend periodically (or on demand) fetches tickets with status `NEW`.
+- The frontend (Pinia store `notifications`) uses polling:
+  - **Platform Admin**:
+    - receives notifications for new tickets relevant to the platform (for example, tickets created by Platform Admin users).
+  - **School Admin**:
+    - receives notifications for new tickets for **their own tenant**.
+- Notifications are displayed as a list on the “Notifications” page with:
+  - ticket subject,
+  - reporter name,
+  - institution marker (or “Platform” for platform‑scoped tickets),
+  - status badge (`NEW`, `IN_PROGRESS`, `RESOLVED`),
+  - created at timestamp.
+- The “Mark all as read” action advances the internal “last seen” cursor and clears the local list of unread tickets.
+
+#### 7.3.2 User‑action notifications (users)
+
+In addition to tickets, the system creates a **Notification** entity whenever certain actions are performed on users:
+
+- When a **Platform Admin** creates, updates or deletes a user in a tenant:
+  - All **School Admins of that tenant** receive a notification:
+    - `type`: `USER_ACTION`,
+    - `action`: `CREATED`, `UPDATED` or `DELETED`,
+    - `targetEmail`: email of the affected user,
+    - `actorRole`: `PLATFORM_ADMIN`,
+    - `tenantName`: name of the institution.
+- When a **School Admin** updates a user in their tenant:
+  - **That user** receives a notification:
+    - `type`: `USER_ACTION`, `action: UPDATED`,
+    - `actorRole`: `SCHOOL_ADMIN`,
+    - `changedFields`: list of fields that were changed (first name, last name, role, suspended).
+- When a **School Admin** creates or deletes a user:
+  - Platform Admin does **not** receive additional notifications (by design).
+
+The frontend uses a dedicated section on the “Notifications” page for these user‑action notifications:
+
+- For School Admins:
+  - messages like “Platform Admin created/updated/deleted user {email}.” with the institution name.
+- For end users (when a School Admin updates their account):
+  - message like “Your account was updated by a School Admin.” with the list of changed fields.
+
+The badge on the bell icon in the header shows the sum of:
+
+- unread ticket notifications, and
+- unread user‑action notifications.
 
 ---
 
