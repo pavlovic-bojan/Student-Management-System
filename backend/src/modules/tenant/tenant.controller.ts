@@ -19,5 +19,23 @@ export class TenantController {
     const tenants = await this.tenantService.listTenants();
     res.json({ data: tenants });
   }
+
+  async updateTenant(req: Request, res: Response): Promise<void> {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new ApiError('Validation error', 400);
+    }
+    const id = req.params.id;
+    const { name, code, isActive } = req.body;
+    const payload: { name?: string; code?: string; isActive?: boolean } = {};
+    if (name !== undefined) payload.name = name;
+    if (code !== undefined) payload.code = code;
+    if (isActive !== undefined) payload.isActive = Boolean(isActive);
+    if (Object.keys(payload).length === 0) {
+      throw new ApiError('At least one field (name, code, isActive) is required', 400);
+    }
+    const tenant = await this.tenantService.updateTenant(id, payload);
+    res.json({ data: tenant });
+  }
 }
 

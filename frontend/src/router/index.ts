@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import type { RouteRecordRaw } from 'vue-router';
-import { requireAuth, guestOnly, requireCanCreateUser, requireAdminOrSchoolAdmin } from './guards';
+import { requireAuth, guestOnly, requireCanCreateUser, requireAdminOrSchoolAdmin, requirePlatformAdmin } from './guards';
 
 const routes: RouteRecordRaw[] = [
   {
@@ -81,6 +81,12 @@ const routes: RouteRecordRaw[] = [
         name: 'users',
         component: () => import('@/pages/users/UsersPage.vue'),
         beforeEnter: requireAdminOrSchoolAdmin,
+      },
+      {
+        path: 'tenants',
+        name: 'tenants',
+        component: () => import('@/pages/TenantsPage.vue'),
+        beforeEnter: requirePlatformAdmin,
       },
     ],
   },

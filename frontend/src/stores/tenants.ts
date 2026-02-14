@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { tenantsApi, type Tenant } from '@/api/tenants.api';
+import { tenantsApi, type Tenant, type UpdateTenantPayload } from '@/api/tenants.api';
 
 export const useTenantsStore = defineStore('tenants', () => {
   const tenants = ref<Tenant[]>([]);
@@ -38,11 +38,29 @@ export const useTenantsStore = defineStore('tenants', () => {
     }
   }
 
+  async function updateTenant(id: string, payload: UpdateTenantPayload) {
+    loading.value = true;
+    error.value = null;
+    try {
+      const { data } = await tenantsApi.update(id, payload);
+      const idx = tenants.value.findIndex((t) => t.id === id);
+      if (idx >= 0) tenants.value[idx] = data.data;
+      return data.data;
+    } catch (e: unknown) {
+      error.value =
+        e instanceof Error ? e.message : 'Failed to update tenant';
+      throw e;
+    } finally {
+      loading.value = false;
+    }
+  }
+
   return {
     tenants,
     loading,
     error,
     fetchTenants,
     createTenant,
+    updateTenant,
   };
 });

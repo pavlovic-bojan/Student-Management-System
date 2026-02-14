@@ -14,6 +14,24 @@ export function requireAuth(
   }
 }
 
+/** Only Platform Admin can access (e.g. tenant management) */
+export function requirePlatformAdmin(
+  to: RouteLocationNormalized,
+  _from: RouteLocationNormalized,
+  next: NavigationGuardNext
+) {
+  const auth = useAuthStore();
+  if (!auth.isAuthenticated) {
+    next({ name: 'login', query: { redirect: to.fullPath } });
+    return;
+  }
+  if (auth.user?.role === 'PLATFORM_ADMIN') {
+    next();
+  } else {
+    next({ name: 'tickets' });
+  }
+}
+
 /** Only Platform Admin or School Admin can access */
 export function requireAdminOrSchoolAdmin(
   to: RouteLocationNormalized,

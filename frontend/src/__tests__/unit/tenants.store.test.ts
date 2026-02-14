@@ -7,6 +7,7 @@ vi.mock('@/api/tenants.api', () => ({
   tenantsApi: {
     list: vi.fn(),
     create: vi.fn(),
+    update: vi.fn(),
   },
 }));
 
@@ -15,6 +16,7 @@ describe('tenants store', () => {
     setActivePinia(createPinia());
     vi.mocked(tenantsApi.list).mockReset();
     vi.mocked(tenantsApi.create).mockReset();
+    vi.mocked(tenantsApi.update).mockReset();
   });
 
   it('fetchTenants sets tenants and clears error on success', async () => {
@@ -62,5 +64,36 @@ describe('tenants store', () => {
     expect(result).toEqual(newTenant);
     expect(store.tenants).toHaveLength(2);
     expect(store.tenants[0]).toEqual(newTenant);
+  });
+
+  it('updateTenant updates tenant in list and returns it', async () => {
+    const store = useTenantsStore();
+    store.tenants = [
+      { id: 't1', name: 'Old', code: 'O', isActive: true, createdAt: '', updatedAt: '' },
+    ];
+    const updated = {
+      id: 't1',
+      name: 'Updated',
+      code: 'U',
+      isActive: false,
+      createdAt: '',
+      updatedAt: '',
+    };
+    vi.mocked(tenantsApi.update).mockResolvedValue({ data: { data: updated } });
+
+    const result = await store.updateTenant('t1', { name: 'Updated', code: 'U', isActive: false });
+
+    expect(result).toEqual(updated);
+    expect(store.tenants).toHaveLength(1);
+    expect(store.tenants[0]).toEqual(updated);
+  });
+
+  it('updateTenant sets error on failure', async () => {
+    const store = useTenantsStore();
+    store.tenants = [{ id: 't1', name: 'A', code: 'A', isActive: true, createdAt: '', updatedAt: '' }];
+    vi.mocked(tenantsApi.update).mockRejectedValue(new Error('Conflict'));
+
+    await expect(store.updateTenant('t1', { code: 'X' })).rejects.toThrow();
+    expect(store.error).toBe('Conflict');
   });
 });

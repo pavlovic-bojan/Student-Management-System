@@ -284,14 +284,38 @@ paths:
 
   /tenants:
     get:
-      summary: List all tenants
+      summary: List all tenants (Platform Admin only)
+      description: Returns all tenants. Only callable by Platform Admin (BRD §7.0).
       tags: [Tenants]
+      security: [{ bearerAuth: [] }]
       responses:
-        '200': { description: List of tenants }
+        '200':
+          description: List of tenants
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, format: uuid }
+                        name: { type: string }
+                        code: { type: string }
+                        isActive: { type: boolean }
+                        createdAt: { type: string, format: date-time }
+                        updatedAt: { type: string, format: date-time }
+        '401': { description: Missing or invalid token }
+        '403': { description: Forbidden – only Platform Admin can list tenants }
     post:
-      summary: Create tenant
+      summary: Create tenant (Platform Admin only)
+      description: Creates a new tenant (institution). Only callable by Platform Admin (BRD §7.0). Code must be unique.
       tags: [Tenants]
+      security: [{ bearerAuth: [] }]
       requestBody:
+        required: true
         content:
           application/json:
             schema:
@@ -301,8 +325,64 @@ paths:
                 name: { type: string }
                 code: { type: string }
       responses:
-        '201': { description: Tenant created }
-        '409': { description: Code already exists }
+        '201':
+          description: Tenant created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id: { type: string, format: uuid }
+                      name: { type: string }
+                      code: { type: string }
+                      isActive: { type: boolean }
+        '400': { description: Validation error }
+        '401': { description: Missing or invalid token }
+        '403': { description: Forbidden – only Platform Admin can create tenants }
+        '409': { description: Tenant code already exists }
+  /tenants/{id}:
+    patch:
+      summary: Update tenant (Platform Admin only)
+      description: Update tenant name, code, or isActive (deactivate). Only callable by Platform Admin (BRD §7.0). At least one field required.
+      tags: [Tenants]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                code: { type: string }
+                isActive: { type: boolean }
+      responses:
+        '200':
+          description: Tenant updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id: { type: string, format: uuid }
+                      name: { type: string }
+                      code: { type: string }
+                      isActive: { type: boolean }
+        '400': { description: Validation error or no fields provided }
+        '401': { description: Missing or invalid token }
+        '403': { description: Forbidden – only Platform Admin can update tenants }
+        '404': { description: Tenant not found }
+        '409': { description: Tenant code already exists (when changing code) }
 
   /students:
     get:

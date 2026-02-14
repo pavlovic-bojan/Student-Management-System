@@ -33,7 +33,8 @@
     "records": "Dosije",
     "createUser": "Kreiraj korisnika",
     "createStudent": "Kreiraj studenta",
-    "users": "Korisnici"
+    "users": "Korisnici",
+    "tenants": "Tenanti"
   },
   "createUser": {
     "title": "Kreiraj korisnika",
@@ -78,6 +79,18 @@
     "toastUpdated": "Student izmenjen: {index}",
     "toastDeleted": "Student obrisan: {index}",
     "loadError": "Greška pri učitavanju studenata"
+  },
+  "tenants": {
+    "title": "Tenanti",
+    "add": "Dodaj tenant",
+    "name": "Naziv",
+    "code": "Šifra",
+    "active": "Aktivan",
+    "empty": "Nema tenanata",
+    "searchPlaceholder": "Pretraga po nazivu ili šifri",
+    "edit": "Izmeni",
+    "toastCreated": "Tenant kreiran: {name}",
+    "toastUpdated": "Tenant ažuriran: {name}"
   },
   "programs": {
     "title": "Programi",

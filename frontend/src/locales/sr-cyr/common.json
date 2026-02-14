@@ -33,7 +33,8 @@
     "records": "Досије",
     "createUser": "Креирај корисника",
     "createStudent": "Креирај студента",
-    "users": "Корисници"
+    "users": "Корисници",
+    "tenants": "Тенанти"
   },
   "createUser": {
     "title": "Креирај корисника",
@@ -78,6 +79,18 @@
     "toastUpdated": "Студент измењен: {index}",
     "toastDeleted": "Студент обрисан: {index}",
     "loadError": "Грешка при учитавању студената"
+  },
+  "tenants": {
+    "title": "Тенанти",
+    "add": "Додај тенанта",
+    "name": "Назив",
+    "code": "Шифра",
+    "active": "Активан",
+    "empty": "Нема тенанта",
+    "searchPlaceholder": "Претрага по називу или шифри",
+    "edit": "Измени",
+    "toastCreated": "Тенант креиран: {name}",
+    "toastUpdated": "Тенант ажуриран: {name}"
   },
   "programs": {
     "title": "Програми",

@@ -65,6 +65,7 @@ frontend/
 │   │   ├── auth/           # LoginPage, ForgotPasswordPage, RegisterPage
 │   │   ├── users/          # UsersPage (list, create, edit, delete)
 │   │   ├── StudentsPage.vue
+│   │   ├── TenantsPage.vue  # Tenants list, create, edit (Platform Admin only)
 │   │   ├── ProgramsPage.vue
 │   │   ├── CoursesPage.vue
 │   │   ├── ExamsPage.vue
@@ -76,7 +77,7 @@ frontend/
 │   │   └── ProfilePage.vue
 │   ├── router/
 │   │   ├── index.ts        # Routes and lazy-loaded components
-│   │   └── guards.ts       # requireAuth, guestOnly, requireAdminOrSchoolAdmin, requireCanCreateUser
+│   │   └── guards.ts       # requireAuth, guestOnly, requirePlatformAdmin, requireAdminOrSchoolAdmin, requireCanCreateUser
 │   ├── stores/             # Pinia stores (auth, tenants, students, programs, courses, exams, finance, records, notifications, ui)
 │   ├── locales/            # i18n messages (en, sr-lat, sr-cyr)
 │   ├── css/
@@ -132,7 +133,7 @@ For full monorepo setup (backend, DB, seed), see the root **[LOCAL_SETUP.md](../
 ## API layer
 
 - **Client**: `src/api/client.ts` creates an Axios instance with `baseURL` from `VITE_API_URL`. Request interceptor adds `Authorization: Bearer <token>` (from `localStorage.jwt_token`) and `x-tenant-id` (from `localStorage.user.tenantId`). Response interceptor on 401 clears auth and redirects to login.
-- **Modules**: Each domain (auth, users, tenants, students, programs, courses, exams, finance, records, tickets, notifications) has an `*.api.ts` file that uses this client and exports typed functions (e.g. `studentsApi.list(tenantId?)`, `studentsApi.create(data)`, `studentsApi.update(studentId, data)`, `studentsApi.deleteEnrollment(enrollmentId)`).
+- **Modules**: Each domain (auth, users, tenants, students, programs, courses, exams, finance, records, tickets, notifications) has an `*.api.ts` file that uses this client and exports typed functions (e.g. `tenantsApi.list()`, `tenantsApi.create(data)`, `tenantsApi.update(id, data)`; `studentsApi.list(tenantId?)`, `studentsApi.create(data)`, etc.).
 - **Stores** call these API modules and hold loading/error state and list data; pages use stores and handle UI (drawers, tables, forms).
 
 ---
@@ -142,7 +143,7 @@ For full monorepo setup (backend, DB, seed), see the root **[LOCAL_SETUP.md](../
 | Store           | Purpose |
 |-----------------|--------|
 | `auth`          | User, token, login/logout/register, `tenantId`, `isAuthenticated`, `initAuth`, `setCredentials`, `clearCredentials` |
-| `tenants`       | List of tenants, `fetchTenants`, `createTenant` (used for tenant dropdown by Platform Admin) |
+| `tenants`       | List of tenants, `fetchTenants`, `createTenant`, `updateTenant` (tenant management page and dropdown; Platform Admin only) |
 | `students`      | List of students (enrollments), `fetchStudents(tenantId?)`, `createStudent`, `updateStudent`, `deleteEnrollment`, `clearStudents` |
 | `programs`      | Programs list and CRUD |
 | `courses`       | Courses list and CRUD |
@@ -162,9 +163,10 @@ Stores that depend on tenant context (e.g. students, programs) use `useAuthStore
 - **Guards** (in `src/router/guards.ts`):
   - `requireAuth`: Allows access if authenticated; otherwise redirects to `login` with `redirect` query.
   - `guestOnly`: For auth pages; redirects to `redirect` query or `/` if already authenticated.
+  - `requirePlatformAdmin`: Only Platform Admin; others redirect to `tickets` (used for **Tenants** page).
   - `requireAdminOrSchoolAdmin`: Only Platform Admin or School Admin; others redirect to `tickets`.
   - `requireCanCreateUser`: Platform Admin, School Admin, or Professor; others redirect to `tickets`.
-- **Users page** uses `requireAdminOrSchoolAdmin`; other main routes use `requireAuth` only.
+- **Tenants page** (`/tenants`) uses `requirePlatformAdmin`; **Users page** uses `requireAdminOrSchoolAdmin`; other main routes use `requireAuth` only.
 
 ---
 
@@ -182,9 +184,9 @@ Tests live under `src/__tests__/` and are run with **Vitest**. Config is in `vit
 ### Unit tests (`src/__tests__/unit/`)
 
 - **auth.store.test.ts**: `setCredentials`, `clearCredentials`, `initAuth` (localStorage and state).
-- **tenants.store.test.ts**: `fetchTenants` (success and error), `createTenant` (prepends and returns). API is mocked with `vi.mock('@/api/tenants.api')`.
+- **tenants.store.test.ts**: `fetchTenants` (success and error), `createTenant` (prepends and returns), `updateTenant` (updates list and returns; error on failure). API is mocked with `vi.mock('@/api/tenants.api')`.
 - **students.store.test.ts**: `canFetch`, `fetchStudents` (success, Platform Admin no tenant), `createStudent` (no tenant throws), `clearStudents`. API mocked; Pinia auth store set for role/tenant.
-- **router-guards.test.ts**: `requireAuth` (allowed vs redirect to login), `guestOnly` (not authenticated vs redirect), `requireAdminOrSchoolAdmin` (PLATFORM_ADMIN/SCHOOL_ADMIN allowed, PROFESSOR redirect), `requireCanCreateUser` (PROFESSOR allowed, STUDENT redirect). Uses real Pinia and guards; `next` is a mock.
+- **router-guards.test.ts**: `requireAuth` (allowed vs redirect to login), `guestOnly` (not authenticated vs redirect), `requirePlatformAdmin` (PLATFORM_ADMIN allowed, SCHOOL_ADMIN/missing user redirect to tickets), `requireAdminOrSchoolAdmin` (PLATFORM_ADMIN/SCHOOL_ADMIN allowed, PROFESSOR redirect), `requireCanCreateUser` (PROFESSOR allowed, STUDENT redirect). Uses real Pinia and guards; `next` is a mock.
 
 Unit tests **do not** hit the real backend; they use mocks and in-memory state.
 
@@ -213,7 +215,7 @@ No backend or environment variables are required for the current test suite.
 | Area              | Unit tests | Component tests |
 |-------------------|------------|-----------------|
 | Auth store        | ✅ setCredentials, clearCredentials, initAuth | — |
-| Tenants store     | ✅ fetchTenants, createTenant (mocked API) | — |
+| Tenants store     | ✅ fetchTenants, createTenant, updateTenant (mocked API) | — |
 | Students store    | ✅ canFetch, fetchStudents, createStudent, clearStudents (mocked API) | — |
 | Programs store    | ✅ fetchPrograms, createProgram, updateProgram, deleteProgram, clearPrograms | — |
 | Courses store     | ✅ fetchCourses, createCourse, updateCourse, deleteCourse, clearCourses | — |
@@ -222,7 +224,7 @@ No backend or environment variables are required for the current test suite.
 | Records store     | ✅ fetchTranscripts, generateTranscript, clearRecords | — |
 | Notifications store | ✅ unreadCount, pollTickets, pollUserNotifications, markAllRead | — |
 | UI store          | ✅ toggleLeftDrawer, closeLeftDrawer, submit/createUser drawers | — |
-| Router guards     | ✅ requireAuth, guestOnly, requireAdminOrSchoolAdmin, requireCanCreateUser | — |
+| Router guards     | ✅ requireAuth, guestOnly, requirePlatformAdmin, requireAdminOrSchoolAdmin, requireCanCreateUser | — |
 | DarkModeToggle    | — | ✅ toggle and localStorage |
 | AuthLayout        | — | ✅ smoke mount |
 | MainLayout        | — | ✅ smoke mount (sidebar) |
@@ -232,6 +234,7 @@ No backend or environment variables are required for the current test suite.
 | StudentsPage      | — | ✅ smoke mount |
 | UsersPage         | — | ✅ smoke mount |
 | ProgramsPage      | — | ✅ smoke mount |
+| TenantsPage      | — | ✅ smoke mount (table or empty state; Platform Admin) |
 | CoursesPage       | — | ✅ smoke mount |
 | ExamsPage         | — | ✅ smoke mount |
 | FinancePage       | — | ✅ smoke mount |

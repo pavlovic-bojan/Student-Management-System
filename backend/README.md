@@ -146,7 +146,7 @@ For full setup (including frontend and Docker), see the root **[LOCAL_SETUP.md](
 | Health        | `/api/health`       | `GET /` → `{ status: 'ok' }` |
 | **Auth**      | `/api`              | `POST /auth/login`, `POST /auth/register`, `GET /auth/me`, `POST /auth/forgot-password`, `POST /auth/logout` |
 | **Users**     | `/api/users`        | `GET /` (list by tenant), `GET /platform-admins`, `PATCH /:id`, `DELETE /:id` |
-| Tenants       | `/api/tenants`      | `GET /`, `POST /` |
+| **Tenants**   | `/api/tenants`      | `GET /` (list), `POST /` (create), `PATCH /:id` (update name/code/isActive). **Platform Admin only** (BRD §7.0). |
 | **Students**  | `/api/students`     | `GET /` (list enrollments), `POST /` (create person + enrollment), `POST /:studentId/tenants` (add to tenant), `DELETE /enrollments/:enrollmentId`, `PATCH /:studentId` (person data) |
 | Programs      | `/api/programs`     | `GET /`, `POST /`, `PATCH /:id`, `DELETE /:id` |
 | Courses       | `/api/courses`      | `GET /`, `POST /`, `PATCH /:id`, `DELETE /:id` |
@@ -155,6 +155,8 @@ For full setup (including frontend and Docker), see the root **[LOCAL_SETUP.md](
 | Records       | `/api/records`      | `GET/POST /transcripts` |
 | **Tickets**   | `/api/tickets`      | `POST /` (submit bug report), `GET /` (list, filters), `PATCH /:id` (status, priority) |
 | **Notifications** | `/api/notifications` | `GET /` (list for current user), `POST /mark-read` |
+
+**Tenants (BRD §7.0):** Only **Platform Admin** can list, create, and update tenants (name, code, isActive/deactivate). All `/api/tenants` routes require authentication and Platform Admin role; otherwise 401 or 403.
 
 **Auth & Users (BRD §7.1):** No public registration. Only Platform Admin, School Admin, or Professor can create users (Professor only students, in own tenant(s)). List/edit/suspend/delete: Platform Admin or School Admin (School Admin scoped to own tenant). Suspended accounts cannot log in (403).
 
@@ -186,7 +188,7 @@ Unit tests live under `src/__tests__/unit/`. They **do not** hit the real server
 - **Services**: Auth, Tenant, Students, Programs, Courses, Exams, Finance, Records, Tickets, Notifications — with mocked repositories.
 - **Use cases**: e.g. `CreateTenantUseCase`; student creation logic is in `StudentsService` (duplicate index → 409).
 - **Auth service**: register (409, 404, 201), login (401, 403, 200), listUsers, updateUser, deleteUser.
-- **Middleware**: tenantContext, authenticate (401, test bypass), requireAdminOrSchoolAdmin, errorHandler.
+- **Middleware**: tenantContext, authenticate (401, test bypass), requireAdminOrSchoolAdmin, requirePlatformAdmin (403 for non–Platform Admin), requireCanCreateUser, errorHandler.
 
 **Run unit tests only (no DB required):**
 
@@ -204,7 +206,7 @@ Integration tests live under `src/__tests__/integration/`. They send **real HTTP
 
 - **Health**: `GET /api/health` → 200.
 - **Auth & Users**: login, register, list users, platform-admins, PATCH, DELETE, suspend.
-- **Tenants**: GET, POST; duplicate code → 409.
+- **Tenants**: GET, POST, PATCH (update/deactivate); 401 without auth, 403 when role is not Platform Admin; duplicate code → 409; PATCH 404 for non-existent id.
 - **Students**: GET list, POST create (person + enrollment), duplicate index → 409, PATCH (person), DELETE enrollment, 404.
 - **Programs, Courses, Exams, Finance, Records**: GET/POST (and PATCH/DELETE where applicable) with test tenant and headers.
 - **Tickets**: POST create, validation, GET list, PATCH status/priority.

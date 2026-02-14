@@ -33,7 +33,8 @@
     "records": "Records",
     "createUser": "Create user",
     "createStudent": "Create student",
-    "users": "Users"
+    "users": "Users",
+    "tenants": "Tenants"
   },
   "createUser": {
     "title": "Create user",
@@ -78,6 +79,18 @@
     "toastUpdated": "Student updated: {index}",
     "toastDeleted": "Student deleted: {index}",
     "loadError": "Failed to load students"
+  },
+  "tenants": {
+    "title": "Tenants",
+    "add": "Add tenant",
+    "name": "Name",
+    "code": "Code",
+    "active": "Active",
+    "empty": "No tenants",
+    "searchPlaceholder": "Search by name or code",
+    "edit": "Edit",
+    "toastCreated": "Tenant created: {name}",
+    "toastUpdated": "Tenant updated: {name}"
   },
   "programs": {
     "title": "Programs",

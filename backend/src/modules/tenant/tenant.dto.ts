@@ -5,6 +5,7 @@ export interface CreateTenantDto {
 
 export interface UpdateTenantDto {
   name?: string;
+  code?: string;
   isActive?: boolean;
 }
 

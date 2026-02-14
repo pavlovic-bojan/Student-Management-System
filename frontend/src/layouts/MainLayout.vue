@@ -93,6 +93,21 @@
         </q-item>
 
         <q-item
+          v-if="auth.user?.role === 'PLATFORM_ADMIN'"
+          clickable
+          v-ripple
+          to="/tenants"
+          active-class="app-nav-item-active"
+          data-test="nav-tenants"
+          class="app-nav-item"
+        >
+          <q-item-section avatar>
+            <q-icon name="business" />
+          </q-item-section>
+          <q-item-section>{{ t('nav.tenants') }}</q-item-section>
+        </q-item>
+
+        <q-item
           v-if="auth.user?.role === 'PLATFORM_ADMIN' || auth.user?.role === 'SCHOOL_ADMIN'"
           clickable
           v-ripple

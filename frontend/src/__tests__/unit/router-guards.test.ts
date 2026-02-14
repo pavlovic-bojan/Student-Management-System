@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/auth';
 import {
   requireAuth,
   guestOnly,
+  requirePlatformAdmin,
   requireAdminOrSchoolAdmin,
   requireCanCreateUser,
 } from '@/router/guards';
@@ -85,6 +86,48 @@ describe('router guards', () => {
       guestOnly({ query: {} } as any, {} as any, next);
 
       expect(next).toHaveBeenCalledWith('/');
+    });
+  });
+
+  describe('requirePlatformAdmin', () => {
+    it('redirects to login when not authenticated', () => {
+      const auth = useAuthStore();
+      auth.user = null;
+      auth.token = null;
+
+      requirePlatformAdmin({ fullPath: '/tenants' } as any, {} as any, next);
+
+      expect(next).toHaveBeenCalledWith({ name: 'login', query: { redirect: '/tenants' } });
+    });
+
+    it('calls next() when user is PLATFORM_ADMIN', () => {
+      const auth = useAuthStore();
+      auth.user = { id: '1', email: 'a@b.com', firstName: 'A', lastName: 'B', role: 'PLATFORM_ADMIN', tenantId: 't1', tenantIds: ['t1'] };
+      auth.token = 'token';
+
+      requirePlatformAdmin({ fullPath: '/tenants' } as any, {} as any, next);
+
+      expect(next).toHaveBeenCalledWith();
+    });
+
+    it('redirects to tickets when user is SCHOOL_ADMIN', () => {
+      const auth = useAuthStore();
+      auth.user = { id: '1', email: 'a@b.com', firstName: 'A', lastName: 'B', role: 'SCHOOL_ADMIN', tenantId: 't1', tenantIds: ['t1'] };
+      auth.token = 'token';
+
+      requirePlatformAdmin({ fullPath: '/tenants' } as any, {} as any, next);
+
+      expect(next).toHaveBeenCalledWith({ name: 'tickets' });
+    });
+
+    it('redirects to login when user is missing (not authenticated)', () => {
+      const auth = useAuthStore();
+      auth.user = null;
+      auth.token = 'token';
+
+      requirePlatformAdmin({ fullPath: '/tenants' } as any, {} as any, next);
+
+      expect(next).toHaveBeenCalledWith({ name: 'login', query: { redirect: '/tenants' } });
     });
   });
 

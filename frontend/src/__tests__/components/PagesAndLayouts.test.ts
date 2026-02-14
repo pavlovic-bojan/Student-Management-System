@@ -23,6 +23,7 @@ import RegisterPage from '@/pages/auth/RegisterPage.vue';
 import StudentsPage from '@/pages/StudentsPage.vue';
 import UsersPage from '@/pages/users/UsersPage.vue';
 import ProgramsPage from '@/pages/ProgramsPage.vue';
+import TenantsPage from '@/pages/TenantsPage.vue';
 import CoursesPage from '@/pages/CoursesPage.vue';
 import ExamsPage from '@/pages/ExamsPage.vue';
 import FinancePage from '@/pages/FinancePage.vue';
@@ -183,6 +184,22 @@ describe('ProgramsPage', () => {
 
   it('mounts without error', async () => {
     const wrapper = await mountWithRouter(ProgramsPage, '/programs', pinia);
+    expect(wrapper.exists()).toBe(true);
+  });
+});
+
+describe('TenantsPage', () => {
+  let pinia: ReturnType<typeof createPinia>;
+  beforeEach(() => {
+    pinia = createPinia();
+    setActivePinia(pinia);
+    const auth = useAuthStore();
+    auth.user = { id: '1', email: 'a@b.com', firstName: 'A', lastName: 'B', role: 'PLATFORM_ADMIN', tenantId: 't1', tenantIds: ['t1'] };
+    auth.token = 'token';
+  });
+
+  it('mounts without error', async () => {
+    const wrapper = await mountWithRouter(TenantsPage, '/tenants', pinia);
     expect(wrapper.exists()).toBe(true);
   });
 });

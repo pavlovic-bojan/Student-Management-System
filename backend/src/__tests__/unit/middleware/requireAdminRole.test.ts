@@ -1,6 +1,49 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { requireAdminOrSchoolAdmin, requireCanCreateUser } from '../../../middleware/requireAdminRole';
+import { requireAdminOrSchoolAdmin, requirePlatformAdmin, requireCanCreateUser } from '../../../middleware/requireAdminRole';
 import { mockRequest, mockResponse } from '../../helpers/testHelpers';
+
+describe('requirePlatformAdmin', () => {
+  let req: ReturnType<typeof mockRequest>;
+  let res: ReturnType<typeof mockResponse>;
+  let next: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    req = mockRequest();
+    res = mockResponse();
+    next = vi.fn();
+  });
+
+  it('should call next when role is PLATFORM_ADMIN', () => {
+    (req as any).user = { sub: 'u1', tenantId: 't1', role: 'PLATFORM_ADMIN' };
+    requirePlatformAdmin(req as any, res as any, next);
+    expect(next).toHaveBeenCalledWith();
+  });
+
+  it('should call next with ApiError 403 when role is SCHOOL_ADMIN', () => {
+    (req as any).user = { sub: 'u1', tenantId: 't1', role: 'SCHOOL_ADMIN' };
+    requirePlatformAdmin(req as any, res as any, next);
+    expect(next).toHaveBeenCalled();
+    const err = (next as any).mock.calls[0][0];
+    expect(err.statusCode).toBe(403);
+    expect(err.message).toContain('only Platform Admin');
+  });
+
+  it('should call next with ApiError 403 when role is PROFESSOR', () => {
+    (req as any).user = { sub: 'u1', tenantId: 't1', role: 'PROFESSOR' };
+    requirePlatformAdmin(req as any, res as any, next);
+    expect(next).toHaveBeenCalled();
+    const err = (next as any).mock.calls[0][0];
+    expect(err.statusCode).toBe(403);
+  });
+
+  it('should call next with ApiError 403 when user is missing', () => {
+    (req as any).user = undefined;
+    requirePlatformAdmin(req as any, res as any, next);
+    expect(next).toHaveBeenCalled();
+    const err = (next as any).mock.calls[0][0];
+    expect(err.statusCode).toBe(403);
+  });
+});
 
 describe('requireAdminOrSchoolAdmin', () => {
   let req: ReturnType<typeof mockRequest>;

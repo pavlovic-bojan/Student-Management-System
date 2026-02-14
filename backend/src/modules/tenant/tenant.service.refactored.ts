@@ -1,3 +1,4 @@
+import { ApiError } from '../../middleware/errorHandler';
 import { ITenantRepository } from './tenant.repository.interface';
 import { CreateTenantDto, UpdateTenantDto } from './tenant.dto';
 import { TenantModel } from './tenant.model';
@@ -23,6 +24,12 @@ export class TenantService {
   }
 
   async updateTenant(id: string, dto: UpdateTenantDto): Promise<TenantModel> {
+    const existing = await this.tenantRepository.findById(id);
+    if (!existing) throw new ApiError('Tenant not found', 404);
+    if (dto.code !== undefined) {
+      const byCode = await this.tenantRepository.findByCode(dto.code);
+      if (byCode && byCode.id !== id) throw new ApiError('Tenant code already exists', 409);
+    }
     return this.tenantRepository.update(id, dto);
   }
 }

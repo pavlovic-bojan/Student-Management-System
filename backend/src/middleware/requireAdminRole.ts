@@ -19,6 +19,23 @@ export function requireAdminOrSchoolAdmin(
 }
 
 /**
+ * Allows only PLATFORM_ADMIN (e.g. tenant CRUD).
+ * Must be used after authenticate middleware.
+ */
+export function requirePlatformAdmin(
+  req: Request,
+  _res: Response,
+  next: NextFunction
+): void {
+  const role = req.user?.role;
+  if (role === 'PLATFORM_ADMIN') {
+    next();
+    return;
+  }
+  next(new ApiError('Forbidden: only Platform Admin can perform this action', 403));
+}
+
+/**
  * Allows PLATFORM_ADMIN, SCHOOL_ADMIN, or PROFESSOR (professor can only create students).
  * Must be used after authenticate middleware.
  */
