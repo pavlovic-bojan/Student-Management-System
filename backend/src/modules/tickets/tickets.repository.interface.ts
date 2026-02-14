@@ -7,6 +7,7 @@ export interface ITicketsRepository {
   listTicketsForTenant(
     tenantId: string,
     filters: { status?: 'NEW' | 'IN_PROGRESS' | 'RESOLVED'; priorityOnly?: boolean },
+    options?: { excludeReporterRole?: 'PLATFORM_ADMIN' },
   ): Promise<TicketListItem[]>;
   updateTicket(
     tenantId: string,

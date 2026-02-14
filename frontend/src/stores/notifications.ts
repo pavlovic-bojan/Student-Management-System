@@ -97,6 +97,12 @@ export const useNotificationsStore = defineStore('notifications', () => {
     }
   }
 
+  /** Clear all notifications (e.g. on logout so next user does not see previous user's data). */
+  function clear() {
+    unreadTickets.value = [];
+    userNotifications.value = [];
+  }
+
   return {
     unreadTickets,
     userNotifications,
@@ -105,6 +111,7 @@ export const useNotificationsStore = defineStore('notifications', () => {
     pollTickets,
     pollUserNotifications,
     markAllRead,
+    clear,
   };
 });
 

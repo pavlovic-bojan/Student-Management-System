@@ -167,7 +167,12 @@ export function registerTicketsRoutes(api: Router): void {
             ? String(req.query.priorityOnly) === 'true'
             : false;
 
-        const tickets = await service.listTickets(tenantId, { status, priorityOnly });
+        const callerRole = req.user!.role;
+        const options =
+          callerRole === 'SCHOOL_ADMIN'
+            ? { excludeReporterRole: 'PLATFORM_ADMIN' as const }
+            : undefined;
+        const tickets = await service.listTickets(tenantId, { status, priorityOnly }, options);
         res.status(200).json({ data: tickets });
       } catch (e) {
         next(e);

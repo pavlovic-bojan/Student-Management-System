@@ -112,7 +112,7 @@ describe('TicketsService', () => {
     expect(repo.listTicketsForTenant).toHaveBeenCalledWith(tenantId, {
       status: 'NEW',
       priorityOnly: true,
-    });
+    }, undefined);
     expect(result).toBe(list);
   });
 

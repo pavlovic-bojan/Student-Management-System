@@ -120,12 +120,14 @@
 import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import { useAuthStore } from '@/stores/auth';
 import { useNotificationsStore } from '@/stores/notifications';
 import type { TicketListItem, TicketStatus } from '@/api/tickets.api';
 import type { UserActionNotification } from '@/api/notifications.api';
 
 const { t } = useI18n();
 const router = useRouter();
+const auth = useAuthStore();
 const notifications = useNotificationsStore();
 
 const statusLabelMap: Record<TicketStatus, string> = {
@@ -200,7 +202,10 @@ function goToTicket(_ticket: TicketListItem) {
 }
 
 onMounted(() => {
-  void notifications.pollTickets();
+  const role = auth.user?.role;
+  if (role === 'PLATFORM_ADMIN' || role === 'SCHOOL_ADMIN') {
+    void notifications.pollTickets();
+  }
   void notifications.pollUserNotifications();
 });
 </script>

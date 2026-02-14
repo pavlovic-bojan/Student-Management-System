@@ -41,8 +41,9 @@ export class TicketsService {
   async listTickets(
     tenantId: string,
     filters: { status?: 'NEW' | 'IN_PROGRESS' | 'RESOLVED'; priorityOnly?: boolean },
+    options?: { excludeReporterRole?: 'PLATFORM_ADMIN' },
   ): Promise<TicketListItem[]> {
-    return this.repo.listTicketsForTenant(tenantId, filters);
+    return this.repo.listTicketsForTenant(tenantId, filters, options);
   }
 
   async updateTicket(

@@ -563,18 +563,18 @@ onMounted(() => {
     i18nLocale.value = saved;
   }
 
-  // Start simple polling for new relevant tickets (bug reports) for admins
+  // Ticket notifications (bug reports) only for admins
   if (auth.user?.role === 'PLATFORM_ADMIN' || auth.user?.role === 'SCHOOL_ADMIN') {
     void notifications.pollTickets();
-    void notifications.pollUserNotifications();
-    setInterval(() => {
-      void notifications.pollTickets();
-      void notifications.pollUserNotifications();
-    }, 30000);
+    setInterval(() => void notifications.pollTickets(), 30000);
   }
+  // User-action notifications (e.g. "your account was updated") for everyone
+  void notifications.pollUserNotifications();
+  setInterval(() => void notifications.pollUserNotifications(), 30000);
 });
 
 async function handleLogout() {
+  notifications.clear();
   await auth.logout();
   router.push('/auth/login');
 }

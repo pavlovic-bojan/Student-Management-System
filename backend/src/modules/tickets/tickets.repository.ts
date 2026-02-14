@@ -32,6 +32,7 @@ export class TicketsRepository implements ITicketsRepository {
   async listTicketsForTenant(
     tenantId: string,
     filters: { status?: 'NEW' | 'IN_PROGRESS' | 'RESOLVED'; priorityOnly?: boolean },
+    options?: { excludeReporterRole?: 'PLATFORM_ADMIN' },
   ): Promise<TicketListItem[]> {
     const where: any = { tenantId };
     if (filters.status) {
@@ -39,6 +40,9 @@ export class TicketsRepository implements ITicketsRepository {
     }
     if (filters.priorityOnly) {
       where.isPriority = true;
+    }
+    if (options?.excludeReporterRole) {
+      where.createdBy = { role: { not: options.excludeReporterRole } };
     }
 
     const rows = await this.prisma.ticket.findMany({
