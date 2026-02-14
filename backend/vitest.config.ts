@@ -8,6 +8,8 @@ export default defineConfig({
     setupFiles: ['./vitest.setup.ts'],
     globalTeardown: './src/__tests__/globalTeardown.ts',
     include: ['src/__tests__/**/*.test.ts'],
+    // Run test files one at a time to avoid DB connection pool exhaustion in CI (P1017).
+    fileParallelism: false,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'lcov'],

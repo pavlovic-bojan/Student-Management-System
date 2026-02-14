@@ -23,7 +23,10 @@ async function cleanupTestData(): Promise<void> {
       return;
     }
 
-    const studentIds = await prisma.student.findMany({ where: { tenantId: { in: tenantIds } }, select: { id: true } }).then((r) => r.map((s) => s.id));
+    // Students linked to test tenants via StudentTenant (Student has no tenantId)
+    const studentIds = await prisma.studentTenant
+      .findMany({ where: { tenantId: { in: tenantIds } }, select: { studentId: true } })
+      .then((r) => [...new Set(r.map((s) => s.studentId))]);
     const examTermIds = await prisma.examTerm.findMany({ where: { tenantId: { in: tenantIds } }, select: { id: true } }).then((r) => r.map((e) => e.id));
     const courseIds = await prisma.course.findMany({ where: { tenantId: { in: tenantIds } }, select: { id: true } }).then((r) => r.map((c) => c.id));
 
@@ -36,8 +39,16 @@ async function cleanupTestData(): Promise<void> {
     await prisma.course.deleteMany({ where: { tenantId: { in: tenantIds } } });
     await prisma.payment.deleteMany({ where: { tenantId: { in: tenantIds } } });
     await prisma.transcript.deleteMany({ where: { tenantId: { in: tenantIds } } });
-    await prisma.student.deleteMany({ where: { tenantId: { in: tenantIds } } });
+    await prisma.studentTenant.deleteMany({ where: { tenantId: { in: tenantIds } } });
+    // Delete students that no longer have any tenant enrollment (orphans from test data)
+    if (studentIds.length) {
+      const stillEnrolled = await prisma.studentTenant.findMany({ where: { studentId: { in: studentIds } }, select: { studentId: true } });
+      const stillSet = new Set(stillEnrolled.map((s) => s.studentId));
+      const toDelete = studentIds.filter((id) => !stillSet.has(id));
+      if (toDelete.length) await prisma.student.deleteMany({ where: { id: { in: toDelete } } });
+    }
     await prisma.tuition.deleteMany({ where: { tenantId: { in: tenantIds } } });
+    await prisma.ticket.deleteMany({ where: { tenantId: { in: tenantIds } } });
     await prisma.user.deleteMany({ where: { tenantId: { in: tenantIds } } });
     await prisma.userTenant.deleteMany({ where: { tenantId: { in: tenantIds } } });
     await prisma.program.deleteMany({ where: { tenantId: { in: tenantIds } } });
