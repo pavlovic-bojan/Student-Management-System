@@ -158,6 +158,42 @@ Concrete structure in the repository can differ (e.g., `backend`, `frontend`, `t
   - Create, update, deactivate, manage metadata (name, address, billing).
 - All audit and logs include `tenant_id` for traceability.
 
+### 7.0 Tenant Creation and Management (Platform Admin Only)
+
+Only **Platform Admin** can create, update, deactivate, and manage tenant metadata. School Admin, Professor, and Student have no access to tenant CRUD.
+
+#### Who can manage tenants
+
+| Role           | Create tenant | Update / deactivate tenant | List tenants |
+|----------------|---------------|----------------------------|--------------|
+| **Platform Admin** | Yes           | Yes                        | Yes          |
+| **School Admin**   | No            | No                         | No (sees only own tenant in context) |
+| **Professor**      | No            | No                         | No           |
+| **Student**        | No            | No                         | No           |
+
+#### Where in the UI
+
+- A dedicated **Tenants** (or **Institutions**) area in the main navigation, visible **only when the logged-in user is Platform Admin**.
+- **List:** A **QTable** with tenants: name, code, active status, optional metadata (e.g. address), created/updated date.
+- **Create:** A **right-side drawer** (same pattern as “Create user”) with a form; no separate full-page create.
+- **Edit / Deactivate:** Same drawer used for create can be opened in “edit” mode for an existing tenant; or a separate narrow drawer for edit. Deactivate = set “active” to false (tenant remains in DB but is excluded from tenant switcher and new enrollments).
+- **Delete:** Out of scope or restricted (e.g. soft delete / deactivate only); hard delete only if no dependent data, per data retention policy.
+
+#### Fields for tenant (create / edit)
+
+- **Name** (required) – display name of the institution.
+- **Code** (required, unique) – short unique code (e.g. `UNI-BG`, `COLLEGE-X`). Used in tenant switcher and APIs.
+- **Active** (boolean, default true) – whether the tenant is available for use (deactivate instead of delete).
+- **Address** (optional) – physical or legal address.
+- **Billing / metadata** (optional) – any extra fields agreed for billing or reporting (e.g. contract id, contact email). Can be extended later.
+
+#### Rules and validation
+
+- **Code** must be unique across all tenants; server returns 409 if code already exists.
+- Only Platform Admin can call tenant CRUD APIs; others receive 403.
+- Audit log records who created/updated/deactivated which tenant and when.
+- After creating a tenant, Platform Admin can create users (e.g. School Admin) for that tenant via the existing User creation flow (§7.1), choosing the new tenant in the tenant selector.
+
 ### 7.1 User Creation and Account Management
 
 There is **no public user registration**. Only authenticated users with the appropriate role can create other users. Who can create whom, and when, is defined as follows.
