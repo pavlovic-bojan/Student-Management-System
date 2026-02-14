@@ -99,6 +99,7 @@ async function main() {
   await prisma.courseOffering.deleteMany({});
   await prisma.course.deleteMany({});
   await prisma.tuition.deleteMany({});
+  await prisma.studentTenant.deleteMany({});
   await prisma.student.deleteMany({});
   await prisma.user.deleteMany({});
   await prisma.program.deleteMany({});
@@ -227,28 +228,27 @@ async function main() {
     });
     const tuitions = await prisma.tuition.findMany({ where: { tenantId: tenant.id } });
 
+    const students: { id: string }[] = [];
     for (let batchStart = 0; batchStart < STUDENTS_PER_TENANT; batchStart += BATCH_SIZE) {
       const batchEnd = Math.min(batchStart + BATCH_SIZE, STUDENTS_PER_TENANT);
-      const data = [];
+      const studentData = [];
       for (let i = batchStart; i < batchEnd; i++) {
-        const indexNumber = `2020-${(i + 1).toString().padStart(4, '0')}`;
-        const programId = programs[i % programs.length].id;
-        data.push({
-          indexNumber,
+        studentData.push({
           firstName: pick(FIRST_NAMES),
           lastName: pick(LAST_NAMES),
           status: randomStatus(),
-          tenantId: tenant.id,
-          programId,
         });
       }
-      await prisma.student.createMany({ data });
+      const created = await prisma.student.createManyAndReturn({ data: studentData });
+      const enrollmentDataForTenant = created.map((s, idx) => ({
+        studentId: s.id,
+        tenantId: tenant.id,
+        indexNumber: `2020-${(batchStart + idx + 1).toString().padStart(4, '0')}`,
+        programId: programs[(batchStart + idx) % programs.length].id,
+      }));
+      await prisma.studentTenant.createMany({ data: enrollmentDataForTenant });
+      for (const s of created) students.push({ id: s.id });
     }
-
-    const students = await prisma.student.findMany({
-      where: { tenantId: tenant.id },
-      select: { id: true },
-    });
     console.log(`  Students: ${students.length}`);
 
     const enrollmentData: { studentId: string; courseOfferingId: string }[] = [];

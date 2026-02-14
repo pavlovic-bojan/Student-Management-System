@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { ICoursesRepository } from './courses.repository.interface';
 import { CourseModel } from './courses.model';
 import { CreateCourseDto, UpdateCourseDto } from './courses.dto';
+import { ApiError } from '../../middleware/errorHandler';
 
 export class CoursesRepository implements ICoursesRepository {
   constructor(private readonly prisma: PrismaClient) {}
@@ -26,9 +27,23 @@ export class CoursesRepository implements ICoursesRepository {
   }
 
   async update(tenantId: string, id: string, data: UpdateCourseDto): Promise<CourseModel> {
+    const existing = await this.prisma.course.findFirst({
+      where: { id, tenantId },
+    });
+    if (!existing) throw new ApiError('Course not found', 404);
     return this.prisma.course.update({
       where: { id },
       data,
+    });
+  }
+
+  async delete(tenantId: string, id: string): Promise<void> {
+    const existing = await this.prisma.course.findFirst({
+      where: { id, tenantId },
+    });
+    if (!existing) throw new ApiError('Course not found', 404);
+    await this.prisma.course.delete({
+      where: { id },
     });
   }
 }

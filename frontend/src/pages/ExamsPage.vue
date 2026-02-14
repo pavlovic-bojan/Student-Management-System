@@ -114,12 +114,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, watch } from 'vue';
+import { ref, reactive, computed, onMounted, watch } from 'vue';
+import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import { useExamsStore } from '@/stores/exams';
 
 const { t } = useI18n();
+const $q = useQuasar();
 const auth = useAuthStore();
 const store = useExamsStore();
 
@@ -130,31 +132,33 @@ const form = reactive({
   year: new Date().getFullYear(),
 });
 
-const periodColumns = [
-  { name: 'name', label: 'Name', field: 'name', align: 'left' as const },
-  { name: 'term', label: 'Term', field: 'term', align: 'left' as const },
-  { name: 'year', label: 'Year', field: 'year', align: 'center' as const },
-];
+const periodColumns = computed(() => [
+  { name: 'name', label: t('exams.name'), field: 'name', align: 'left' as const, sortable: true },
+  { name: 'term', label: t('exams.term'), field: 'term', align: 'left' as const, sortable: true },
+  { name: 'year', label: t('exams.year'), field: 'year', align: 'center' as const, sortable: true },
+]);
 
-const termColumns = [
-  { name: 'date', label: 'Date', field: (row: { date: string }) => row.date?.slice(0, 10) ?? '', align: 'left' as const },
+const termColumns = computed(() => [
+  { name: 'date', label: t('exams.date'), field: (row: { date: string }) => row.date?.slice(0, 10) ?? '', align: 'left' as const, sortable: true },
   { name: 'id', label: 'ID', field: 'id', align: 'left' as const },
-];
+]);
 
-function onSubmit() {
-  store
-    .createPeriod({
+async function onSubmit() {
+  try {
+    const name = form.name;
+    await store.createPeriod({
       name: form.name,
       term: form.term,
       year: form.year,
-    })
-    .then(() => {
-      drawerOpen.value = false;
-      form.name = '';
-      form.term = '';
-      form.year = new Date().getFullYear();
-    })
-    .catch(() => {});
+    });
+    drawerOpen.value = false;
+    form.name = '';
+    form.term = '';
+    form.year = new Date().getFullYear();
+    $q.notify({ type: 'positive', message: t('exams.toastPeriodCreated', { name }) });
+  } catch {
+    // error in store
+  }
 }
 
 watch(

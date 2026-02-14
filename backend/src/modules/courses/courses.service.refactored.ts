@@ -20,4 +20,8 @@ export class CoursesService {
   async updateCourse(tenantId: string, id: string, dto: UpdateCourseDto): Promise<CourseModel> {
     return this.repository.update(tenantId, id, dto);
   }
+
+  async deleteCourse(tenantId: string, id: string): Promise<void> {
+    return this.repository.delete(tenantId, id);
+  }
 }

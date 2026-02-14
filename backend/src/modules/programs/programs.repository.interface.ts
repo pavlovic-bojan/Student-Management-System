@@ -6,4 +6,5 @@ export interface IProgramsRepository {
   findById(tenantId: string, id: string): Promise<ProgramModel | null>;
   list(tenantId: string): Promise<ProgramModel[]>;
   update(tenantId: string, id: string, data: UpdateProgramDto): Promise<ProgramModel>;
+  delete(tenantId: string, id: string): Promise<void>;
 }

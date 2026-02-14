@@ -7,50 +7,46 @@ describe('StudentsService', () => {
   let mockRepository: IStudentsRepository;
   const tenantId = 'tenant-1';
 
+  const listItem = {
+    enrollmentId: 'e1',
+    studentId: 's1',
+    tenantId,
+    indexNumber: '2024-001',
+    firstName: 'John',
+    lastName: 'Doe',
+    status: 'ACTIVE',
+    tenantName: 'School A',
+    programId: null as string | null,
+  };
+
   beforeEach(() => {
     mockRepository = {
-      create: vi.fn(),
-      findById: vi.fn(),
-      list: vi.fn(),
-      update: vi.fn(),
+      listByTenant: vi.fn(),
+      createPersonAndEnrollment: vi.fn(),
+      findEnrollmentById: vi.fn(),
+      findEnrollmentByStudentAndTenant: vi.fn(),
+      updatePerson: vi.fn(),
+      addStudentToTenant: vi.fn(),
+      deleteEnrollment: vi.fn(),
     };
     service = new StudentsService(mockRepository);
   });
 
   it('should list students for tenant', async () => {
-    const students = [
-      {
-        id: 's1',
-        indexNumber: '2024-001',
-        firstName: 'John',
-        lastName: 'Doe',
-        status: 'ACTIVE' as const,
-        tenantId,
-        programId: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    ];
-    vi.mocked(mockRepository.list).mockResolvedValue(students);
+    vi.mocked(mockRepository.listByTenant).mockResolvedValue([listItem]);
 
     const result = await service.listStudents(tenantId);
 
-    expect(mockRepository.list).toHaveBeenCalledWith(tenantId);
-    expect(result).toEqual(students);
+    expect(mockRepository.listByTenant).toHaveBeenCalledWith(tenantId);
+    expect(result).toEqual([listItem]);
   });
 
-  it('should create student via use case', async () => {
-    vi.mocked(mockRepository.list).mockResolvedValue([]);
-    vi.mocked(mockRepository.create).mockResolvedValue({
-      id: 's1',
-      indexNumber: '2024-001',
+  it('should create student', async () => {
+    vi.mocked(mockRepository.listByTenant).mockResolvedValue([]);
+    vi.mocked(mockRepository.createPersonAndEnrollment).mockResolvedValue({
+      ...listItem,
       firstName: 'Jane',
       lastName: 'Doe',
-      status: 'ACTIVE',
-      tenantId,
-      programId: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
     });
 
     const result = await service.createStudent(tenantId, {
@@ -59,7 +55,8 @@ describe('StudentsService', () => {
       lastName: 'Doe',
     });
 
-    expect(mockRepository.create).toHaveBeenCalledWith(tenantId, {
+    expect(mockRepository.listByTenant).toHaveBeenCalledWith(tenantId);
+    expect(mockRepository.createPersonAndEnrollment).toHaveBeenCalledWith(tenantId, {
       indexNumber: '2024-001',
       firstName: 'Jane',
       lastName: 'Doe',
@@ -69,5 +66,36 @@ describe('StudentsService', () => {
       firstName: 'Jane',
       lastName: 'Doe',
     });
+  });
+
+  it('should update student', async () => {
+    const updated = {
+      id: 's1',
+      firstName: 'Jane',
+      lastName: 'Smith',
+      status: 'ACTIVE' as const,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    vi.mocked(mockRepository.updatePerson).mockResolvedValue(updated);
+
+    const result = await service.updateStudent('s1', {
+      firstName: 'Jane',
+      lastName: 'Smith',
+    });
+
+    expect(mockRepository.updatePerson).toHaveBeenCalledWith('s1', {
+      firstName: 'Jane',
+      lastName: 'Smith',
+    });
+    expect(result).toEqual(updated);
+  });
+
+  it('should delete enrollment', async () => {
+    vi.mocked(mockRepository.deleteEnrollment).mockResolvedValue(undefined);
+
+    await service.deleteEnrollment('e1');
+
+    expect(mockRepository.deleteEnrollment).toHaveBeenCalledWith('e1');
   });
 });

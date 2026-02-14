@@ -20,4 +20,8 @@ export class ProgramsService {
   async updateProgram(tenantId: string, id: string, dto: UpdateProgramDto): Promise<ProgramModel> {
     return this.repository.update(tenantId, id, dto);
   }
+
+  async deleteProgram(tenantId: string, id: string): Promise<void> {
+    return this.repository.delete(tenantId, id);
+  }
 }

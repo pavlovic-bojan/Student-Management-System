@@ -87,8 +87,11 @@ These users are created by the backend seed script. Use them to log in to the ap
 
 *Seed does not create STUDENT login accounts; students exist as records but do not have user logins by default.*
 
+**Tests:** `npm run backend:test:unit` and `npm run frontend:test` run without a database. Full `npm run test:all` (including backend integration tests) requires PostgreSQL; see LOCAL_SETUP.md.
+
 ## Repository structure
 
 - **backend/** — Express + TypeScript + Prisma (PostgreSQL)
 - **frontend/** — Vue 3 + Vite + Quasar
-- **project-doc/** — BRD and other project docs
+- **tests/** — E2E, API, DB, performance (placeholder scripts until tests are added)
+- **project-doc/** — BRD, MVP checklist, and other project docs

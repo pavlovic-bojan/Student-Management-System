@@ -196,12 +196,14 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from 'vue';
+import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import { useFinanceStore } from '@/stores/finance';
 import { useStudentsStore } from '@/stores/students';
 
 const { t } = useI18n();
+const $q = useQuasar();
 const auth = useAuthStore();
 const store = useFinanceStore();
 const studentsStore = useStudentsStore();
@@ -223,44 +225,47 @@ const studentOptions = computed(() =>
   })),
 );
 
-const tuitionColumns = [
-  { name: 'name', label: 'Name', field: 'name', align: 'left' as const },
-  { name: 'amount', label: 'Amount', field: 'amount', align: 'right' as const },
-];
+const tuitionColumns = computed(() => [
+  { name: 'name', label: t('finance.name'), field: 'name', align: 'left' as const, sortable: true },
+  { name: 'amount', label: t('finance.amount'), field: 'amount', align: 'right' as const, sortable: true },
+]);
 
-const paymentColumns = [
-  { name: 'studentId', label: 'Student', field: 'studentId', align: 'left' as const },
-  { name: 'amount', label: 'Amount', field: 'amount', align: 'right' as const },
-  { name: 'paidAt', label: 'Paid at', field: (row: { paidAt: string }) => row.paidAt?.slice(0, 10) ?? '', align: 'left' as const },
-];
+const paymentColumns = computed(() => [
+  { name: 'studentId', label: t('finance.student'), field: 'studentId', align: 'left' as const, sortable: true },
+  { name: 'amount', label: t('finance.amount'), field: 'amount', align: 'right' as const, sortable: true },
+  { name: 'paidAt', label: t('finance.paidAt'), field: (row: { paidAt: string }) => row.paidAt?.slice(0, 10) ?? '', align: 'left' as const, sortable: true },
+]);
 
-function onSubmitTuition() {
-  store
-    .createTuition({ name: tuitionForm.name, amount: tuitionForm.amount })
-    .then(() => {
-      tuitionDrawerOpen.value = false;
-      tuitionForm.name = '';
-      tuitionForm.amount = 0;
-    })
-    .catch(() => {});
+async function onSubmitTuition() {
+  try {
+    const name = tuitionForm.name;
+    await store.createTuition({ name: tuitionForm.name, amount: tuitionForm.amount });
+    tuitionDrawerOpen.value = false;
+    tuitionForm.name = '';
+    tuitionForm.amount = 0;
+    $q.notify({ type: 'positive', message: t('finance.toastTuitionCreated', { name }) });
+  } catch {
+    // error in store
+  }
 }
 
-function onSubmitPayment() {
-  store
-    .createPayment({
+async function onSubmitPayment() {
+  try {
+    await store.createPayment({
       studentId: paymentForm.studentId,
       tuitionId: paymentForm.tuitionId,
       amount: paymentForm.amount,
       paidAt: new Date(paymentForm.paidAt).toISOString(),
-    })
-    .then(() => {
-      paymentDrawerOpen.value = false;
-      paymentForm.studentId = '';
-      paymentForm.tuitionId = '';
-      paymentForm.amount = 0;
-      paymentForm.paidAt = new Date().toISOString().slice(0, 10);
-    })
-    .catch(() => {});
+    });
+    paymentDrawerOpen.value = false;
+    paymentForm.studentId = '';
+    paymentForm.tuitionId = '';
+    paymentForm.amount = 0;
+    paymentForm.paidAt = new Date().toISOString().slice(0, 10);
+    $q.notify({ type: 'positive', message: t('finance.toastPaymentCreated') });
+  } catch {
+    // error in store
+  }
 }
 
 watch(

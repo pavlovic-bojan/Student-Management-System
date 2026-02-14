@@ -63,14 +63,37 @@
     "indexNumber": "Index number",
     "firstName": "First name",
     "lastName": "Last name",
-    "empty": "No students"
+    "institution": "Institution",
+    "empty": "No students",
+    "searchPlaceholder": "Search by index, name or surname",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirmDelete": "Are you sure you want to delete student \"{name}\"?",
+    "status": "Status",
+    "statusActive": "Active",
+    "statusGraduated": "Graduated",
+    "statusDropped": "Dropped",
+    "statusSuspended": "Suspended",
+    "toastCreated": "Student created: {index}",
+    "toastUpdated": "Student updated: {index}",
+    "toastDeleted": "Student deleted: {index}",
+    "loadError": "Failed to load students"
   },
   "programs": {
     "title": "Programs",
     "add": "Add program",
     "name": "Name",
     "code": "Code",
-    "empty": "No programs"
+    "version": "Version",
+    "empty": "No programs",
+    "searchPlaceholder": "Search by name or code",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirmDelete": "Are you sure you want to delete program \"{name}\"?",
+    "toastCreated": "Program created: {name}",
+    "toastUpdated": "Program updated: {name}",
+    "toastDeleted": "Program deleted: {name}",
+    "loadError": "Failed to load programs"
   },
   "courses": {
     "title": "Courses",
@@ -78,7 +101,15 @@
     "name": "Name",
     "code": "Code",
     "program": "Program",
-    "empty": "No courses"
+    "empty": "No courses",
+    "searchPlaceholder": "Search by name or code",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirmDelete": "Are you sure you want to delete course \"{name}\"?",
+    "toastCreated": "Course created: {name}",
+    "toastUpdated": "Course updated: {name}",
+    "toastDeleted": "Course deleted: {name}",
+    "loadError": "Failed to load courses"
   },
   "exams": {
     "title": "Exams",
@@ -90,7 +121,8 @@
     "year": "Year",
     "date": "Date",
     "emptyPeriods": "No exam periods",
-    "emptyTerms": "No exam terms"
+    "emptyTerms": "No exam terms",
+    "toastPeriodCreated": "Exam period created: {name}"
   },
   "finance": {
     "title": "Finance",
@@ -104,7 +136,9 @@
     "student": "Student",
     "tuition": "Tuition",
     "emptyTuitions": "No tuitions",
-    "emptyPayments": "No payments"
+    "emptyPayments": "No payments",
+    "toastTuitionCreated": "Tuition created: {name}",
+    "toastPaymentCreated": "Payment recorded."
   },
   "records": {
     "title": "Records",
@@ -113,7 +147,8 @@
     "student": "Student",
     "gpa": "GPA",
     "generatedAt": "Generated at",
-    "empty": "No transcripts"
+    "empty": "No transcripts",
+    "toastGenerated": "Transcript generated."
   },
   "profile": {
     "title": "My profile",

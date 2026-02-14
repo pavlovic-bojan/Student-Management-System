@@ -1,0 +1,52 @@
+# Local development / MVP hosting - PostgreSQL + Backend + Frontend
+# Usage: copy .env.example to .env in backend/ and set DATABASE_URL, JWT_SECRET, etc.
+#        Then: docker compose up --build
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: sms
+      POSTGRES_PASSWORD: sms_secret
+      POSTGRES_DB: sms_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sms -d sms_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://sms:sms_secret@postgres:5432/sms_db
+      DIRECT_URL: postgresql://sms:sms_secret@postgres:5432/sms_db
+      JWT_SECRET: your-super-secret-jwt-key-minimum-32-characters
+      SESSION_SECRET: your-session-secret-key-minimum-32-characters
+      CORS_ORIGIN: http://localhost:80
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:4000/api
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:

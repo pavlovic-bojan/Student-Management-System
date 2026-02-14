@@ -51,7 +51,7 @@ model Tenant {
 
   users        User[]
   userTenants  UserTenant[]
-  students     Student[]
+  studentTenants StudentTenant[]
   programs     Program[]
   courses      Course[]
   examPeriods  ExamPeriod[]
@@ -87,18 +87,14 @@ enum TicketStatus {
   RESOLVED
 }
 
+/// Student (person) can be enrolled in multiple tenants via StudentTenant.
 model Student {
   id           String        @id @default(uuid())
-  indexNumber  String
   firstName    String
   lastName     String
   status       StudentStatus @default(ACTIVE)
-  tenantId     String
-  tenant       Tenant        @relation(fields: [tenantId], references: [id])
 
-  programId    String?
-  program      Program?      @relation(fields: [programId], references: [id])
-
+  studentTenants StudentTenant[]
   enrollments       Enrollment[]
   transcripts       Transcript[]
   payments          Payment[]
@@ -107,8 +103,27 @@ model Student {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
+  @@index([lastName])
+}
+
+/// Enrollment of a student in a tenant (one student can belong to multiple institutions).
+model StudentTenant {
+  id          String   @id @default(uuid())
+  studentId   String
+  tenantId    String
+  indexNumber String
+  programId   String?
+
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  program     Program? @relation(fields: [programId], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
   @@unique([tenantId, indexNumber])
-  @@index([tenantId, lastName])
+  @@index([tenantId])
+  @@index([studentId])
 }
 
 model Program {
@@ -122,7 +137,7 @@ model Program {
   isActive    Boolean    @default(true)
 
   courses     Course[]
-  students    Student[]
+  studentTenants StudentTenant[]
 
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt

@@ -93,12 +93,14 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from 'vue';
+import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import { useRecordsStore } from '@/stores/records';
 import { useStudentsStore } from '@/stores/students';
 
 const { t } = useI18n();
+const $q = useQuasar();
 const auth = useAuthStore();
 const store = useRecordsStore();
 const studentsStore = useStudentsStore();
@@ -113,20 +115,21 @@ const studentOptions = computed(() =>
   })),
 );
 
-const columns = [
-  { name: 'studentId', label: 'Student', field: 'studentId', align: 'left' as const },
-  { name: 'gpa', label: 'GPA', field: 'gpa', align: 'center' as const },
-  { name: 'generatedAt', label: 'Generated', field: 'generatedAt', align: 'left' as const },
-];
+const columns = computed(() => [
+  { name: 'studentId', label: t('records.student'), field: 'studentId', align: 'left' as const, sortable: true },
+  { name: 'gpa', label: t('records.gpa'), field: 'gpa', align: 'center' as const, sortable: true },
+  { name: 'generatedAt', label: t('records.generatedAt'), field: 'generatedAt', align: 'left' as const, sortable: true },
+]);
 
-function onSubmit() {
-  store
-    .generateTranscript(form.studentId)
-    .then(() => {
-      drawerOpen.value = false;
-      form.studentId = '';
-    })
-    .catch(() => {});
+async function onSubmit() {
+  try {
+    await store.generateTranscript(form.studentId);
+    drawerOpen.value = false;
+    form.studentId = '';
+    $q.notify({ type: 'positive', message: t('records.toastGenerated') });
+  } catch {
+    // error in store
+  }
 }
 
 watch(

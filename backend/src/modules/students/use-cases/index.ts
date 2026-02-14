@@ -1,2 +1,1 @@
-export * from './create-student.use-case';
-
+// Use cases inlined in StudentsService; export when needed.

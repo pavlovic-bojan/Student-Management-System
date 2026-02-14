@@ -21,4 +21,20 @@ export class ProgramsController {
     const program = await this.service.createProgram(tenantId, req.body);
     res.status(201).json({ data: program });
   }
+
+  async updateProgram(req: Request, res: Response): Promise<void> {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) throw new ApiError('Validation error', 400);
+    const tenantId = req.tenantId;
+    if (!tenantId) throw new ApiError('Missing tenant context', 400);
+    const program = await this.service.updateProgram(tenantId, req.params.id, req.body);
+    res.json({ data: program });
+  }
+
+  async deleteProgram(req: Request, res: Response): Promise<void> {
+    const tenantId = req.tenantId;
+    if (!tenantId) throw new ApiError('Missing tenant context', 400);
+    await this.service.deleteProgram(tenantId, req.params.id);
+    res.status(204).send();
+  }
 }

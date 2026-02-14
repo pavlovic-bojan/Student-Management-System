@@ -9,6 +9,9 @@ export interface UpdateStudentDto {
   firstName?: string;
   lastName?: string;
   status?: 'ACTIVE' | 'GRADUATED' | 'DROPPED' | 'SUSPENDED';
-  programId?: string | null;
 }
 
+export interface AddStudentToTenantDto {
+  indexNumber: string;
+  programId?: string;
+}

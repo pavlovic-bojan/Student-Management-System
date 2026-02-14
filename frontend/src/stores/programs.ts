@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { programsApi, type Program } from '@/api/programs.api';
+import { programsApi, type Program, type UpdateProgramRequest } from '@/api/programs.api';
 import { useAuthStore } from '@/stores/auth';
 
 export const useProgramsStore = defineStore('programs', () => {
@@ -45,6 +45,40 @@ export const useProgramsStore = defineStore('programs', () => {
     }
   }
 
+  async function updateProgram(id: string, payload: UpdateProgramRequest) {
+    if (!auth.tenantId) throw new Error('No tenant selected');
+    loading.value = true;
+    error.value = null;
+    try {
+      const { data } = await programsApi.update(id, payload);
+      const idx = programs.value.findIndex((p) => p.id === id);
+      if (idx >= 0) programs.value[idx] = data.data;
+      return data.data;
+    } catch (e: unknown) {
+      error.value =
+        e instanceof Error ? e.message : 'Failed to update program';
+      throw e;
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  async function deleteProgram(id: string) {
+    if (!auth.tenantId) throw new Error('No tenant selected');
+    loading.value = true;
+    error.value = null;
+    try {
+      await programsApi.delete(id);
+      programs.value = programs.value.filter((p) => p.id !== id);
+    } catch (e: unknown) {
+      error.value =
+        e instanceof Error ? e.message : 'Failed to delete program';
+      throw e;
+    } finally {
+      loading.value = false;
+    }
+  }
+
   function clearPrograms() {
     programs.value = [];
     error.value = null;
@@ -56,6 +90,8 @@ export const useProgramsStore = defineStore('programs', () => {
     error,
     fetchPrograms,
     createProgram,
+    updateProgram,
+    deleteProgram,
     clearPrograms,
   };
 });

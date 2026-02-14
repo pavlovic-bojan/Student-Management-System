@@ -13,6 +13,7 @@ describe('CoursesService', () => {
       findById: vi.fn(),
       list: vi.fn(),
       update: vi.fn(),
+      delete: vi.fn(),
     };
     service = new CoursesService(mockRepository);
   });
@@ -79,5 +80,36 @@ describe('CoursesService', () => {
 
     expect(mockRepository.findById).toHaveBeenCalledWith(tenantId, 'c1');
     expect(result).toEqual(course);
+  });
+
+  it('should update course', async () => {
+    const updated = {
+      id: 'c1',
+      name: 'Algebra II',
+      code: 'MATH',
+      tenantId,
+      programId: null,
+      professorId: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    vi.mocked(mockRepository.update).mockResolvedValue(updated);
+
+    const result = await service.updateCourse(tenantId, 'c1', {
+      name: 'Algebra II',
+    });
+
+    expect(mockRepository.update).toHaveBeenCalledWith(tenantId, 'c1', {
+      name: 'Algebra II',
+    });
+    expect(result).toEqual(updated);
+  });
+
+  it('should delete course', async () => {
+    vi.mocked(mockRepository.delete).mockResolvedValue(undefined);
+
+    await service.deleteCourse(tenantId, 'c1');
+
+    expect(mockRepository.delete).toHaveBeenCalledWith(tenantId, 'c1');
   });
 });

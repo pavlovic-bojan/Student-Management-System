@@ -105,6 +105,20 @@ components:
         read:
           type: boolean
 
+    StudentListItem:
+      description: One enrollment (student-in-tenant). Student can have multiple enrollments (many-to-many).
+      type: object
+      properties:
+        enrollmentId: { type: string, format: uuid }
+        studentId: { type: string, format: uuid }
+        tenantId: { type: string, format: uuid }
+        indexNumber: { type: string }
+        firstName: { type: string }
+        lastName: { type: string }
+        status: { type: string, enum: [ACTIVE, GRADUATED, DROPPED, SUSPENDED] }
+        tenantName: { type: string }
+        programId: { type: string, format: uuid, nullable: true }
+
 paths:
   /health:
     get:
@@ -292,13 +306,30 @@ paths:
 
   /students:
     get:
-      summary: List students for current tenant
+      summary: List students (enrollments) for current tenant
+      description: Platform Admin must pass tenantId query; School Admin uses own tenant. Returns list of StudentListItem (enrollmentId, studentId, indexNumber, firstName, lastName, status, tenantName, programId).
       tags: [Students]
       security: [{ bearerAuth: [] }]
+      parameters:
+        - in: query
+          name: tenantId
+          schema: { type: string, format: uuid }
+          description: Required for Platform Admin; ignored for School Admin
       responses:
-        '200': { description: List of students }
+        '200':
+          description: List of students (enrollments)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/StudentListItem' }
+        '400': { description: Platform Admin did not provide tenantId }
     post:
-      summary: Create student for current tenant
+      summary: Create student and enroll in tenant
+      description: Platform Admin must pass tenantId in body (tenant to add student to); School Admin uses own tenant. Creates person (Student) and enrollment (StudentTenant).
       tags: [Students]
       security: [{ bearerAuth: [] }]
       requestBody:
@@ -311,10 +342,93 @@ paths:
                 indexNumber: { type: string }
                 firstName: { type: string }
                 lastName: { type: string }
-                programId: { type: string, format: uuid }
+                programId: { type: string, format: uuid, nullable: true }
+                tenantId: { type: string, format: uuid, description: Required for Platform Admin }
       responses:
-        '201': { description: Student created }
-        '409': { description: Index already exists }
+        '201':
+          description: Student created and enrolled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/StudentListItem' }
+        '400': { description: Validation error or Platform Admin did not provide tenantId }
+        '409': { description: Index already exists in this institution }
+
+  /students/{studentId}/tenants:
+    post:
+      summary: Add existing student to another institution (tenant)
+      description: Platform Admin must pass tenantId in body. Requires indexNumber; programId optional.
+      tags: [Students]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: studentId
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [indexNumber]
+              properties:
+                indexNumber: { type: string }
+                programId: { type: string, format: uuid, nullable: true }
+                tenantId: { type: string, format: uuid, description: Required for Platform Admin }
+      responses:
+        '201':
+          description: Student enrolled in tenant
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/StudentListItem' }
+        '400': { description: Validation error }
+        '404': { description: Student not found }
+        '409': { description: Already enrolled or index exists in institution }
+
+  /students/enrollments/{enrollmentId}:
+    delete:
+      summary: Remove student from institution (delete enrollment)
+      description: Deletes the enrollment (StudentTenant). Student person record remains; use this to remove a student from one tenant.
+      tags: [Students]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: enrollmentId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '204': { description: Enrollment deleted }
+        '404': { description: Enrollment not found }
+
+  /students/{studentId}:
+    patch:
+      summary: Update student person data
+      description: Update firstName, lastName or status for the student (person). Applies to all enrollments of that student.
+      tags: [Students]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: studentId
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName: { type: string }
+                lastName: { type: string }
+                status: { type: string, enum: [ACTIVE, GRADUATED, DROPPED, SUSPENDED] }
+      responses:
+        '200': { description: Student (person) updated }
+        '400': { description: Validation error }
+        '404': { description: Student not found }
 
   /programs:
     get:
@@ -339,6 +453,39 @@ paths:
       responses:
         '201': { description: Program created }
 
+  /programs/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+    patch:
+      summary: Update program
+      description: Update name, code or isActive for current tenant.
+      tags: [Programs]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                code: { type: string }
+                isActive: { type: boolean }
+      responses:
+        '200': { description: Program updated }
+        '400': { description: Validation error }
+        '404': { description: Program not found }
+    delete:
+      summary: Delete program
+      description: Delete program for current tenant.
+      tags: [Programs]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '204': { description: Program deleted }
+        '404': { description: Program not found }
+
   /courses:
     get:
       summary: List courses for current tenant
@@ -362,6 +509,40 @@ paths:
                 programId: { type: string, format: uuid }
       responses:
         '201': { description: Course created }
+
+  /courses/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+    patch:
+      summary: Update course
+      description: Update name, code or programId for current tenant.
+      tags: [Courses]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                code: { type: string }
+                programId: { type: string, format: uuid, nullable: true }
+                professorId: { type: string, format: uuid, nullable: true }
+      responses:
+        '200': { description: Course updated }
+        '400': { description: Validation error }
+        '404': { description: Course not found }
+    delete:
+      summary: Delete course
+      description: Delete course for current tenant.
+      tags: [Courses]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '204': { description: Course deleted }
+        '404': { description: Course not found }
 
   /exams/periods:
     get:

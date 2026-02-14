@@ -63,14 +63,37 @@
     "indexNumber": "Број индекса",
     "firstName": "Име",
     "lastName": "Презиме",
-    "empty": "Нема студената"
+    "institution": "Институција",
+    "empty": "Нема студената",
+    "searchPlaceholder": "Претрага по индексу, имену или презимену",
+    "edit": "Измени",
+    "delete": "Обриши",
+    "confirmDelete": "Да ли сте сигурни да желите да обришете студента \"{name}\"?",
+    "status": "Статус",
+    "statusActive": "Активан",
+    "statusGraduated": "Дипломирао",
+    "statusDropped": "Напустио",
+    "statusSuspended": "Суспендован",
+    "toastCreated": "Студент креиран: {index}",
+    "toastUpdated": "Студент измењен: {index}",
+    "toastDeleted": "Студент обрисан: {index}",
+    "loadError": "Грешка при учитавању студената"
   },
   "programs": {
     "title": "Програми",
     "add": "Додај програм",
     "name": "Назив",
     "code": "Шифра",
-    "empty": "Нема програма"
+    "version": "Верзија",
+    "empty": "Нема програма",
+    "searchPlaceholder": "Претрага по називу или шифри",
+    "edit": "Измени",
+    "delete": "Обриши",
+    "confirmDelete": "Да ли сте сигурни да желите да обришете програм \"{name}\"?",
+    "toastCreated": "Програм креиран: {name}",
+    "toastUpdated": "Програм измењен: {name}",
+    "toastDeleted": "Програм обрисан: {name}",
+    "loadError": "Грешка при учитавању програма"
   },
   "courses": {
     "title": "Курсеви",
@@ -78,7 +101,15 @@
     "name": "Назив",
     "code": "Шифра",
     "program": "Програм",
-    "empty": "Нема курсева"
+    "empty": "Нема курсева",
+    "searchPlaceholder": "Претрага по називу или шифри",
+    "edit": "Измени",
+    "delete": "Обриши",
+    "confirmDelete": "Да ли сте сигурни да желите да обришете курс \"{name}\"?",
+    "toastCreated": "Курс креиран: {name}",
+    "toastUpdated": "Курс измењен: {name}",
+    "toastDeleted": "Курс обрисан: {name}",
+    "loadError": "Грешка при учитавању курсева"
   },
   "exams": {
     "title": "Испити",
@@ -90,7 +121,8 @@
     "year": "Година",
     "date": "Датум",
     "emptyPeriods": "Нема испитних рокова",
-    "emptyTerms": "Нема испитних термина"
+    "emptyTerms": "Нема испитних термина",
+    "toastPeriodCreated": "Испитни рок креиран: {name}"
   },
   "finance": {
     "title": "Финансије",
@@ -104,7 +136,9 @@
     "student": "Студент",
     "tuition": "Школарина",
     "emptyTuitions": "Нема школарина",
-    "emptyPayments": "Нема уплата"
+    "emptyPayments": "Нема уплата",
+    "toastTuitionCreated": "Школарина креирана: {name}",
+    "toastPaymentCreated": "Уплата забележена."
   },
   "records": {
     "title": "Досије",
@@ -113,7 +147,8 @@
     "student": "Студент",
     "gpa": "Просек",
     "generatedAt": "Генерисано",
-    "empty": "Нема транскрипата"
+    "empty": "Нема транскрипата",
+    "toastGenerated": "Транскрипт генерисан."
   },
   "profile": {
     "title": "Мој профил",

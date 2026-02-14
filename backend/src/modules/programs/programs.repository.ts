@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { IProgramsRepository } from './programs.repository.interface';
 import { ProgramModel } from './programs.model';
 import { CreateProgramDto, UpdateProgramDto } from './programs.dto';
+import { ApiError } from '../../middleware/errorHandler';
 
 export class ProgramsRepository implements IProgramsRepository {
   constructor(private readonly prisma: PrismaClient) {}
@@ -26,9 +27,23 @@ export class ProgramsRepository implements IProgramsRepository {
   }
 
   async update(tenantId: string, id: string, data: UpdateProgramDto): Promise<ProgramModel> {
+    const existing = await this.prisma.program.findFirst({
+      where: { id, tenantId },
+    });
+    if (!existing) throw new ApiError('Program not found', 404);
     return this.prisma.program.update({
       where: { id },
       data,
+    });
+  }
+
+  async delete(tenantId: string, id: string): Promise<void> {
+    const existing = await this.prisma.program.findFirst({
+      where: { id, tenantId },
+    });
+    if (!existing) throw new ApiError('Program not found', 404);
+    await this.prisma.program.delete({
+      where: { id },
     });
   }
 }
