@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import request from 'supertest';
+import { randomUUID } from 'crypto';
 import { PrismaClient } from '@prisma/client';
 import { app } from '../../server';
 
@@ -8,6 +9,8 @@ const prisma = new PrismaClient();
 describe('Tickets API (integration)', () => {
   let tenantId: string;
   let createdTicketId: string;
+  let userOneId: string;
+  let userThreeId: string;
 
   beforeAll(async () => {
     const tenant = await prisma.tenant.create({
@@ -18,11 +21,14 @@ describe('Tickets API (integration)', () => {
     });
     tenantId = tenant.id;
 
+    userOneId = randomUUID();
+    userThreeId = randomUUID();
+
     // Create test users so Ticket.createdById foreign key is satisfied
     await prisma.user.create({
       data: {
-        id: 'user-tickets-1',
-        email: 'tickets1@example.com',
+        id: userOneId,
+        email: `tickets1-${userOneId}@example.com`,
         password: 'hashed-password',
         firstName: 'Tickets',
         lastName: 'UserOne',
@@ -33,8 +39,8 @@ describe('Tickets API (integration)', () => {
 
     await prisma.user.create({
       data: {
-        id: 'user-tickets-3',
-        email: 'tickets3@example.com',
+        id: userThreeId,
+        email: `tickets3-${userThreeId}@example.com`,
         password: 'hashed-password',
         firstName: 'Tickets',
         lastName: 'UserThree',
@@ -48,7 +54,7 @@ describe('Tickets API (integration)', () => {
     const res = await request(app)
       .post('/api/tickets')
       .set('x-test-tenant-id', tenantId)
-      .set('x-test-user-id', 'user-tickets-1')
+      .set('x-test-user-id', userOneId)
       .send({
         subject: 'Bug in dashboard',
         description: 'When I click on button X, I see an error in the console.',
@@ -65,7 +71,7 @@ describe('Tickets API (integration)', () => {
       steps: '1. Login\n2. Open dashboard\n3. Click button X',
       expectedActual: 'Expected: no error.\nActual: error in console.',
       tenantId,
-      createdById: 'user-tickets-1',
+      createdById: userOneId,
       status: 'NEW',
     });
 
@@ -76,7 +82,7 @@ describe('Tickets API (integration)', () => {
     const res = await request(app)
       .post('/api/tickets')
       .set('x-test-tenant-id', tenantId)
-      .set('x-test-user-id', 'user-tickets-2')
+      .set('x-test-user-id', userOneId)
       .send({
         subject: 'shrt',
         description: 'short',
@@ -94,7 +100,7 @@ describe('Tickets API (integration)', () => {
     const first = await request(app)
       .post('/api/tickets')
       .set('x-test-tenant-id', tenantId)
-      .set('x-test-user-id', 'user-tickets-3')
+      .set('x-test-user-id', userThreeId)
       .send(payload);
 
     expect(first.status).toBe(201);
@@ -102,7 +108,7 @@ describe('Tickets API (integration)', () => {
     const second = await request(app)
       .post('/api/tickets')
       .set('x-test-tenant-id', tenantId)
-      .set('x-test-user-id', 'user-tickets-3')
+      .set('x-test-user-id', userThreeId)
       .send(payload);
 
     expect(second.status).toBe(429);
@@ -112,7 +118,7 @@ describe('Tickets API (integration)', () => {
     const res = await request(app)
       .get('/api/tickets')
       .set('x-test-tenant-id', tenantId)
-      .set('x-test-user-id', 'user-tickets-1')
+      .set('x-test-user-id', userOneId)
       .set('x-test-role', 'PLATFORM_ADMIN');
 
     expect(res.status).toBe(200);
@@ -128,7 +134,7 @@ describe('Tickets API (integration)', () => {
     const res = await request(app)
       .patch(`/api/tickets/${createdTicketId}`)
       .set('x-test-tenant-id', tenantId)
-      .set('x-test-user-id', 'user-tickets-1')
+      .set('x-test-user-id', userOneId)
       .set('x-test-role', 'PLATFORM_ADMIN')
       .send({ isPriority: true });
 

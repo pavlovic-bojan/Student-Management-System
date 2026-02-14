@@ -114,7 +114,7 @@ describe('Students API (integration)', () => {
   });
 
   it('PATCH /api/students/{studentId} for non-existent id should return 404', async () => {
-    const fakeId = '00000000-0000-0000-0000-000000000001';
+    const fakeId = 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee';
     const res = await request(app)
       .patch(`/api/students/${fakeId}`)
       .set('x-test-tenant-id', tenantId)
@@ -148,7 +148,7 @@ describe('Students API (integration)', () => {
   });
 
   it('DELETE /api/students/enrollments/{enrollmentId} for non-existent id should return 404', async () => {
-    const fakeId = '00000000-0000-0000-0000-000000000001';
+    const fakeId = 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee';
     const res = await request(app)
       .delete(`/api/students/enrollments/${fakeId}`)
       .set('x-test-tenant-id', tenantId)

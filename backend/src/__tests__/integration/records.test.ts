@@ -17,10 +17,15 @@ describe('Records API (integration)', () => {
     tenantId = tenant.id;
     const student = await prisma.student.create({
       data: {
-        indexNumber: `REC-STU-${Date.now()}`,
         firstName: 'Records',
         lastName: 'Student',
+      },
+    });
+    await prisma.studentTenant.create({
+      data: {
+        studentId: student.id,
         tenantId,
+        indexNumber: `REC-STU-${Date.now()}`,
       },
     });
     studentId = student.id;
@@ -28,7 +33,8 @@ describe('Records API (integration)', () => {
 
   afterAll(async () => {
     await prisma.transcript.deleteMany({ where: { tenantId } }).catch(() => {});
-    await prisma.student.deleteMany({ where: { tenantId } }).catch(() => {});
+    await prisma.studentTenant.deleteMany({ where: { tenantId } }).catch(() => {});
+    if (studentId) await prisma.student.delete({ where: { id: studentId } }).catch(() => {});
     await prisma.tenant.deleteMany({ where: { id: tenantId } }).catch(() => {});
     await prisma.$disconnect();
   });

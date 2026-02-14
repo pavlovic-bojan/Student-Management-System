@@ -19,10 +19,15 @@ describe('Finance API (integration)', () => {
     tenantId = tenant.id;
     const student = await prisma.student.create({
       data: {
-        indexNumber: `FIN-STU-${Date.now()}`,
         firstName: 'Finance',
         lastName: 'Student',
+      },
+    });
+    await prisma.studentTenant.create({
+      data: {
+        studentId: student.id,
         tenantId,
+        indexNumber: `FIN-STU-${Date.now()}`,
       },
     });
     studentId = student.id;
@@ -39,7 +44,8 @@ describe('Finance API (integration)', () => {
   afterAll(async () => {
     await prisma.payment.deleteMany({ where: { tenantId } }).catch(() => {});
     await prisma.tuition.deleteMany({ where: { tenantId } }).catch(() => {});
-    await prisma.student.deleteMany({ where: { tenantId } }).catch(() => {});
+    await prisma.studentTenant.deleteMany({ where: { tenantId } }).catch(() => {});
+    if (studentId) await prisma.student.delete({ where: { id: studentId } }).catch(() => {});
     await prisma.tenant.deleteMany({ where: { id: tenantId } }).catch(() => {});
     await prisma.$disconnect();
   });
