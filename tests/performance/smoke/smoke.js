@@ -8,6 +8,7 @@
 
 import { check } from 'k6';
 import { getConfig, getThresholds } from '../lib/config.js';
+export { handleSummary } from '../lib/summary.js';
 import { getHealth, getMe, thinkTime } from '../lib/api.js';
 import { getScenarioConfig, getScenarioName } from '../lib/scenarios.js';
 

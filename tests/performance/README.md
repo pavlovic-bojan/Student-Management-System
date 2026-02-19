@@ -37,6 +37,7 @@ Performance tests for the SMS backend API. All tests are configured for **minimu
 ```bash
 # Health only (no token)
 BASE_URL=http://localhost:4000 npm run smoke
+# HTML report written to k6-report/index.html
 
 # With token
 BASE_URL=http://localhost:4000 AUTH_TOKEN=eyJ... npm run smoke
@@ -74,6 +75,15 @@ BASE_URL=http://localhost:4000 ./run.sh smoke
 BASE_URL=http://localhost:4000 npm run tests:performance
 ```
 
+## HTML Report
+
+Each run generates an HTML report (via [k6-reporter](https://github.com/benc-uk/k6-reporter)) at:
+
+- **Local:** `tests/performance/k6-report/index.html`
+- **CI:** Deployed to `gh-pages` branch, subfolder `/load/`
+
+Report URL: `https://<owner>.github.io/<repo>/load/` (see [root README](../../README.md#test-reports)).
+
 ## CI/CD Integration
 
 ### GitHub Actions
@@ -81,9 +91,9 @@ BASE_URL=http://localhost:4000 npm run tests:performance
 1. **Backend deploy workflow** – After the health check, it automatically runs the **smoke test** (if the backend is on Render, it uses `BACKEND_URL`).
 
 2. **Performance workflow** (`.github/workflows/performance.yml`):
-   - Automatically on push to `tests/performance/`
-   - Manual: *Run workflow* → choose test type (smoke, baseline, load, …)
+   - Manual: *Actions → Performance Tests → Run workflow* → choose test type (smoke, baseline, load, …)
    - Uses `BACKEND_URL` from secrets (or input `base_url`)
+   - Deploys HTML report to `gh-pages-load-test` branch
 
 ### Required Secrets
 
@@ -96,6 +106,7 @@ BASE_URL=http://localhost:4000 npm run tests:performance
 tests/performance/
 ├── lib/
 │   ├── config.js    # BASE_URL, thresholds
+│   ├── summary.js   # HTML report (handleSummary)
 │   ├── auth.js      # JWT headers
 │   ├── api.js       # getHealth, getMe, getTenants
 │   ├── scenarios.js # VU/iteration config (minimum)

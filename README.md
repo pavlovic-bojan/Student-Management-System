@@ -6,7 +6,15 @@ Stack: **Express + TypeScript + Prisma (PostgreSQL)** for the API, **Vue 3 + Vit
 
 ## Test reports
 
-- **Allure Report:** [https://pavlovic-bojan.github.io/Student-Management-System/](https://pavlovic-bojan.github.io/Student-Management-System/) (deployed after each Playwright run on main)
+GitHub Pages (`gh-pages` branch):
+
+| Report | URL |
+|--------|-----|
+| **Landing** | [https://pavlovic-bojan.github.io/Student-Management-System/](https://pavlovic-bojan.github.io/Student-Management-System/) |
+| **Allure** (Playwright API + E2E) | [allure/](https://pavlovic-bojan.github.io/Student-Management-System/allure/) |
+| **k6 Load Test** | [load/](https://pavlovic-bojan.github.io/Student-Management-System/load/) |
+
+Deployed after each Playwright run (main) and each Performance workflow run. Enable **Settings → Pages → Deploy from branch** → `gh-pages`.
 
 ## Live app
 
@@ -124,7 +132,7 @@ Secrets (set in **Settings → Secrets and variables → Actions**):
 - **Playwright API** uses `API_BASE_URL=$BACKEND_URL` and paths `api/health`, `api/auth/login`, etc.
 - **Performance (k6)** uses `BASE_URL=$BACKEND_URL`; endpoints are `$BASE_URL/api/health`, etc.
 
-**Allure report:** Playwright workflow deploys Allure to GitHub Pages. Enable **Settings → Pages → Source: Deploy from branch** → branch `gh-pages` → folder `/ (root)`.
+**Test reports:** Both Playwright (Allure) and Performance (k6) deploy to `gh-pages` in subfolders `/allure/` and `/load/`. Landing page at root. Enable **Settings → Pages → Source: Deploy from branch** → `gh-pages`.
 
 ## Repository structure
 

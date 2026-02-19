@@ -53,6 +53,8 @@ Thumbs.db
 test-results/
 playwright-report/
 coverage/
+k6-report/
+gh-pages-content/
 .nyc_output/
 allure-results/
 allure-report/
