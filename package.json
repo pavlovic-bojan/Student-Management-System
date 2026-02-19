@@ -2,6 +2,7 @@
   "name": "student-management-system",
   "private": true,
   "version": "0.1.0",
+  "author": "Bojan Pavlovic <bojanpavlovicoffice@gmail.com>",
   "description": "Multi-tenant Student Management System (SMS) - monorepo (backend, frontend, tests) following BRD and .cursor rules.",
   "workspaces": [
     "backend",
