@@ -4,7 +4,7 @@ Multi-tenant Student Management System (SMS): backend API and frontend web app.
 
 ## Results for the last tests run
 
-- **Allure:** [https://pavlovic-bojan.github.io/Student-Management-System/](...)
+- **Allure Report:** [https://pavlovic-bojan.github.io/Student-Management-System/](https://pavlovic-bojan.github.io/Student-Management-System/) (deployed after each Playwright run on main)
 
 ## Live app
 
@@ -114,6 +114,8 @@ Workflows use these secrets. Set them in **Settings → Secrets and variables �
 - **Frontend build** uses `VITE_API_URL=$BACKEND_URL/api`
 - **Playwright API** uses `API_BASE_URL=$BACKEND_URL` and paths `api/health`, `api/auth/login`, etc.
 - **Performance (k6)** uses `BASE_URL=$BACKEND_URL`; endpoints are `$BASE_URL/api/health`, etc.
+
+**Allure report:** Playwright workflow deploys Allure to GitHub Pages. Enable **Settings → Pages → Source: Deploy from branch** → branch `gh-pages` → folder `/ (root)`.
 
 ## Repository structure
 
