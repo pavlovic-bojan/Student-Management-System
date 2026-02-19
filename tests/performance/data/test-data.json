@@ -1,0 +1,12 @@
+{
+  "endpoints": {
+    "health": "/api/health",
+    "login": "/api/auth/login",
+    "me": "/api/auth/me",
+    "tenants": "/api/tenants"
+  },
+  "thinkTime": {
+    "min": 0.3,
+    "max": 1
+  }
+}

@@ -1,0 +1,892 @@
+# Student Management System API
+# Synced with backend/openapi.yaml. See BRD.md §7 for business rules.
+openapi: 3.0.3
+info:
+  title: Student Management System API
+  description: |
+    Multi-tenant SMS backend. Auth and user creation rules per BRD §7.1.
+    Tenant management (BRD §7.0), tickets (BRD §7.2), notifications (BRD §7.3).
+  version: 1.0.0
+
+servers:
+  - url: /api
+    description: API base path
+
+tags:
+  - name: Health
+  - name: Auth
+  - name: Users
+  - name: Tenants
+  - name: Students
+  - name: Programs
+  - name: Courses
+  - name: Exams
+  - name: Finance
+  - name: Records
+  - name: Tickets
+  - name: Notifications
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT from login response
+
+  schemas:
+    UserListItem:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        firstName: { type: string }
+        lastName: { type: string }
+        role: { type: string, enum: [PLATFORM_ADMIN, SCHOOL_ADMIN, PROFESSOR, STUDENT] }
+        tenantId: { type: string, format: uuid }
+        suspended: { type: boolean }
+        createdAt: { type: string, format: date-time }
+
+    Ticket:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        subject: { type: string }
+        description: { type: string }
+        page: { type: string, nullable: true }
+        steps: { type: string, nullable: true }
+        expectedActual: { type: string, nullable: true }
+        status: { type: string, enum: [NEW, IN_PROGRESS, RESOLVED] }
+        isPriority: { type: boolean }
+        tenantId: { type: string, format: uuid }
+        createdById: { type: string, format: uuid }
+        createdAt: { type: string, format: date-time }
+    TicketListItem:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        subject: { type: string }
+        status: { type: string, enum: [NEW, IN_PROGRESS, RESOLVED] }
+        isPriority: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        tenantId: { type: string, format: uuid }
+        tenantName: { type: string }
+        reporterName: { type: string }
+        reporterEmail: { type: string, format: email }
+        reporterRole:
+          type: string
+          enum: [PLATFORM_ADMIN, SCHOOL_ADMIN, PROFESSOR, STUDENT]
+
+    Notification:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        type: { type: string, example: USER_ACTION }
+        action:
+          type: string
+          enum: [CREATED, UPDATED, DELETED]
+        targetEmail:
+          type: string
+          format: email
+          nullable: true
+        actorRole:
+          type: string
+          nullable: true
+          enum: [PLATFORM_ADMIN, SCHOOL_ADMIN, PROFESSOR, STUDENT, null]
+        actorName:
+          type: string
+          nullable: true
+        tenantName:
+          type: string
+          nullable: true
+        changedFields:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        read:
+          type: boolean
+
+    StudentListItem:
+      description: One enrollment (student-in-tenant). Student can have multiple enrollments (many-to-many).
+      type: object
+      properties:
+        enrollmentId: { type: string, format: uuid }
+        studentId: { type: string, format: uuid }
+        tenantId: { type: string, format: uuid }
+        indexNumber: { type: string }
+        firstName: { type: string }
+        lastName: { type: string }
+        status: { type: string, enum: [ACTIVE, GRADUATED, DROPPED, SUSPENDED] }
+        tenantName: { type: string }
+        programId: { type: string, format: uuid, nullable: true }
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      tags: [Health]
+      responses:
+        '200': { description: API is healthy, content: { application/json: { schema: { type: object, properties: { status: { type: string, example: ok } } } } } }
+
+  /auth/login:
+    post:
+      summary: Login
+      description: Returns user and JWT. 403 if account is suspended.
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+      responses:
+        '200': { description: User and token }
+        '401': { description: Invalid email or password }
+        '403': { description: Account is suspended }
+
+  /auth/register:
+    post:
+      summary: Create user (no public registration)
+      description: Platform Admin any role/tenant; School Admin only SCHOOL_ADMIN/PROFESSOR/STUDENT in own tenant; Professor only STUDENT in own tenant(s). BRD §7.1.
+      tags: [Auth]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, firstName, lastName, role, tenantId]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, minLength: 8 }
+                firstName: { type: string }
+                lastName: { type: string }
+                role: { type: string, enum: [PLATFORM_ADMIN, SCHOOL_ADMIN, PROFESSOR, STUDENT] }
+                tenantId: { type: string, format: uuid }
+      responses:
+        '201': { description: User created (user + token) }
+        '401': { description: Missing or invalid token }
+        '403': { description: Forbidden }
+        '404': { description: Tenant not found }
+        '409': { description: Email already exists }
+
+  /auth/forgot-password:
+    post:
+      summary: Forgot password
+      tags: [Auth]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        '200': { description: Message }
+
+  /auth/me:
+    get:
+      summary: Current user
+      description: Returns current user (including tenantIds for professors on multiple tenants).
+      tags: [Auth]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: User object }
+        '401': { description: Missing or invalid token }
+
+  /auth/logout:
+    post:
+      summary: Logout
+      tags: [Auth]
+      responses:
+        '200': { description: Message }
+
+  /users:
+    get:
+      summary: List users for a tenant
+      description: Platform Admin must pass tenantId query; School Admin uses own tenant. Only Platform Admin or School Admin.
+      tags: [Users]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: query
+          name: tenantId
+          schema: { type: string, format: uuid }
+          description: Required for Platform Admin; ignored for School Admin
+      responses:
+        '200': { description: List of users, content: { application/json: { schema: { type: object, properties: { users: { type: array, items: { $ref: '#/components/schemas/UserListItem' } } } } } } }
+        '400': { description: Platform Admin did not provide tenantId }
+        '401': { description: Missing or invalid token }
+        '403': { description: Caller is not Platform Admin or School Admin }
+
+  /users/platform-admins:
+    get:
+      summary: List all Platform Admin users
+      description: Only callable by Platform Admin. Returns all users with role PLATFORM_ADMIN across all tenants.
+      tags: [Users]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: List of Platform Admin users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserListItem'
+        '401': { description: Missing or invalid token }
+        '403': { description: Caller is not Platform Admin }
+
+  /users/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+    patch:
+      summary: Update user (edit, suspend)
+      description: Platform Admin or School Admin; School Admin only for same tenant.
+      tags: [Users]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName: { type: string }
+                lastName: { type: string }
+                role: { type: string, enum: [PLATFORM_ADMIN, SCHOOL_ADMIN, PROFESSOR, STUDENT] }
+                suspended: { type: boolean }
+      responses:
+        '200': { description: Updated user }
+        '401': { description: Missing or invalid token }
+        '403': { description: Forbidden }
+        '404': { description: User not found }
+    delete:
+      summary: Delete user
+      description: Cannot delete own account. School Admin only for same tenant.
+      tags: [Users]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '204': { description: User deleted }
+        '400': { description: Cannot delete your own account }
+        '401': { description: Missing or invalid token }
+        '403': { description: Forbidden }
+        '404': { description: User not found }
+
+  /tenants:
+    get:
+      summary: List all tenants (Platform Admin only)
+      description: Returns all tenants. Only callable by Platform Admin. BRD §7.0.
+      tags: [Tenants]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: List of tenants
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, format: uuid }
+                        name: { type: string }
+                        code: { type: string }
+                        isActive: { type: boolean }
+                        createdAt: { type: string, format: date-time }
+                        updatedAt: { type: string, format: date-time }
+        '401': { description: Missing or invalid token }
+        '403': { description: Forbidden – only Platform Admin can list tenants }
+    post:
+      summary: Create tenant (Platform Admin only)
+      description: Creates a new tenant (institution). Only callable by Platform Admin. BRD §7.0. Code must be unique.
+      tags: [Tenants]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, code]
+              properties:
+                name: { type: string }
+                code: { type: string }
+      responses:
+        '201':
+          description: Tenant created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id: { type: string, format: uuid }
+                      name: { type: string }
+                      code: { type: string }
+                      isActive: { type: boolean }
+        '400': { description: Validation error }
+        '401': { description: Missing or invalid token }
+        '403': { description: Forbidden – only Platform Admin can create tenants }
+        '409': { description: Tenant code already exists }
+  /tenants/{id}:
+    patch:
+      summary: Update tenant (Platform Admin only)
+      description: Update tenant name, code, or isActive (deactivate). Only callable by Platform Admin. BRD §7.0.
+      tags: [Tenants]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                code: { type: string }
+                isActive: { type: boolean }
+      responses:
+        '200':
+          description: Tenant updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id: { type: string, format: uuid }
+                      name: { type: string }
+                      code: { type: string }
+                      isActive: { type: boolean }
+        '400': { description: Validation error or no fields provided }
+        '401': { description: Missing or invalid token }
+        '403': { description: Forbidden – only Platform Admin can update tenants }
+        '404': { description: Tenant not found }
+        '409': { description: Tenant code already exists (when changing code) }
+
+  /students:
+    get:
+      summary: List students (enrollments) for current tenant
+      description: Platform Admin must pass tenantId query; School Admin uses own tenant.
+      tags: [Students]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: query
+          name: tenantId
+          schema: { type: string, format: uuid }
+          description: Required for Platform Admin; ignored for School Admin
+      responses:
+        '200':
+          description: List of students (enrollments)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/StudentListItem' }
+        '400': { description: Platform Admin did not provide tenantId }
+    post:
+      summary: Create student and enroll in tenant
+      description: Platform Admin must pass tenantId in body; School Admin uses own tenant.
+      tags: [Students]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [indexNumber, firstName, lastName]
+              properties:
+                indexNumber: { type: string }
+                firstName: { type: string }
+                lastName: { type: string }
+                programId: { type: string, format: uuid, nullable: true }
+                tenantId: { type: string, format: uuid, description: Required for Platform Admin }
+      responses:
+        '201':
+          description: Student created and enrolled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/StudentListItem' }
+        '400': { description: Validation error or Platform Admin did not provide tenantId }
+        '409': { description: Index already exists in this institution }
+
+  /students/{studentId}/tenants:
+    post:
+      summary: Add existing student to another institution (tenant)
+      tags: [Students]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: studentId
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [indexNumber]
+              properties:
+                indexNumber: { type: string }
+                programId: { type: string, format: uuid, nullable: true }
+                tenantId: { type: string, format: uuid, description: Required for Platform Admin }
+      responses:
+        '201': { description: Student enrolled in tenant }
+        '400': { description: Validation error }
+        '404': { description: Student not found }
+        '409': { description: Already enrolled or index exists in institution }
+
+  /students/enrollments/{enrollmentId}:
+    delete:
+      summary: Remove student from institution (delete enrollment)
+      tags: [Students]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: enrollmentId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '204': { description: Enrollment deleted }
+        '404': { description: Enrollment not found }
+
+  /students/{studentId}:
+    patch:
+      summary: Update student person data
+      tags: [Students]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: studentId
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName: { type: string }
+                lastName: { type: string }
+                status: { type: string, enum: [ACTIVE, GRADUATED, DROPPED, SUSPENDED] }
+      responses:
+        '200': { description: Student (person) updated }
+        '400': { description: Validation error }
+        '404': { description: Student not found }
+
+  /programs:
+    get:
+      summary: List programs for current tenant
+      tags: [Programs]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: List of programs }
+    post:
+      summary: Create program
+      tags: [Programs]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, code]
+              properties:
+                name: { type: string }
+                code: { type: string }
+      responses:
+        '201': { description: Program created }
+
+  /programs/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+    patch:
+      summary: Update program
+      tags: [Programs]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                code: { type: string }
+                isActive: { type: boolean }
+      responses:
+        '200': { description: Program updated }
+        '400': { description: Validation error }
+        '404': { description: Program not found }
+    delete:
+      summary: Delete program
+      tags: [Programs]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '204': { description: Program deleted }
+        '404': { description: Program not found }
+
+  /courses:
+    get:
+      summary: List courses for current tenant
+      tags: [Courses]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: List of courses }
+    post:
+      summary: Create course
+      tags: [Courses]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, code]
+              properties:
+                name: { type: string }
+                code: { type: string }
+                programId: { type: string, format: uuid }
+      responses:
+        '201': { description: Course created }
+
+  /courses/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+    patch:
+      summary: Update course
+      tags: [Courses]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                code: { type: string }
+                programId: { type: string, format: uuid, nullable: true }
+                professorId: { type: string, format: uuid, nullable: true }
+      responses:
+        '200': { description: Course updated }
+        '400': { description: Validation error }
+        '404': { description: Course not found }
+    delete:
+      summary: Delete course
+      tags: [Courses]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '204': { description: Course deleted }
+        '404': { description: Course not found }
+
+  /exams/periods:
+    get:
+      summary: List exam periods
+      tags: [Exams]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: List of periods }
+    post:
+      summary: Create exam period
+      tags: [Exams]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                term: { type: string }
+                year: { type: integer }
+      responses:
+        '201': { description: Period created }
+
+  /exams/terms:
+    get:
+      summary: List exam terms
+      tags: [Exams]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: List of terms }
+    post:
+      summary: Create exam term
+      tags: [Exams]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                periodId: { type: string, format: uuid }
+                date: { type: string, format: date-time }
+      responses:
+        '201': { description: Term created }
+
+  /finance/tuitions:
+    get:
+      summary: List tuitions
+      tags: [Finance]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: List of tuitions }
+    post:
+      summary: Create tuition
+      tags: [Finance]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                amount: { type: number }
+      responses:
+        '201': { description: Tuition created }
+
+  /finance/payments:
+    get:
+      summary: List payments
+      tags: [Finance]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: List of payments }
+    post:
+      summary: Create payment
+      tags: [Finance]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                studentId: { type: string, format: uuid }
+                tuitionId: { type: string, format: uuid }
+                amount: { type: number }
+                paidAt: { type: string, format: date-time }
+      responses:
+        '201': { description: Payment created }
+
+  /records/transcripts:
+    get:
+      summary: List transcripts
+      tags: [Records]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: List of transcripts }
+    post:
+      summary: Create/generate transcript
+      tags: [Records]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                studentId: { type: string, format: uuid }
+      responses:
+        '201': { description: Transcript created }
+
+  /notifications:
+    get:
+      summary: List notifications for current user
+      description: User-action notifications per BRD §7.3.2.
+      tags: [Notifications]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: query
+          name: unreadOnly
+          schema:
+            type: boolean
+          required: false
+          description: If true, only unread notifications are returned (default true).
+      responses:
+        '200':
+          description: List of notifications
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notifications:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Notification'
+        '401': { description: Missing or invalid token }
+
+  /notifications/mark-read:
+    post:
+      summary: Mark notifications as read
+      tags: [Notifications]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+      responses:
+        '204': { description: Notifications marked as read }
+        '401': { description: Missing or invalid token }
+
+  /tickets:
+    post:
+      summary: Submit a bug report / ticket
+      description: Any authenticated user. BRD §7.2. Rate limit per user.
+      tags: [Tickets]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [subject, description]
+              properties:
+                subject:
+                  type: string
+                  minLength: 5
+                  maxLength: 200
+                description:
+                  type: string
+                  minLength: 10
+                  maxLength: 2000
+                page:
+                  type: string
+                  maxLength: 255
+                steps:
+                  type: string
+                  minLength: 5
+                  maxLength: 4000
+                expectedActual:
+                  type: string
+                  minLength: 5
+                  maxLength: 4000
+      responses:
+        '201':
+          description: Ticket created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Ticket'
+        '400': { description: Validation error }
+        '401': { description: Missing or invalid token }
+        '429': { description: Too many requests (cooldown not expired) }
+    get:
+      summary: List bug report tickets for current tenant
+      description: Platform/School admins. School Admin excludes tickets created by Platform Admin.
+      tags: [Tickets]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [NEW, IN_PROGRESS, RESOLVED]
+          required: false
+        - in: query
+          name: priorityOnly
+          schema:
+            type: boolean
+          required: false
+      responses:
+        '200':
+          description: List of tickets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TicketListItem'
+        '400': { description: Validation error }
+        '401': { description: Missing or invalid token }
+        '403': { description: Forbidden }
+  /tickets/{id}:
+    patch:
+      summary: Update ticket status or priority
+      tags: [Tickets]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [NEW, IN_PROGRESS, RESOLVED]
+                isPriority:
+                  type: boolean
+      responses:
+        '200':
+          description: Updated ticket
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Ticket'
+        '400': { description: Validation error }
+        '401': { description: Missing or invalid token }
+        '403': { description: Forbidden }
+        '404': { description: Ticket not found }
