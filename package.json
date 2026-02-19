@@ -6,10 +6,7 @@
   "workspaces": [
     "backend",
     "frontend",
-    "tests",
     "tests/e2e",
-    "tests/e2e/api",
-    "tests/e2e/db",
     "tests/performance"
   ],
   "scripts": {
@@ -20,10 +17,11 @@
     "frontend:dev": "npm --workspace frontend run dev",
     "frontend:test": "npm --workspace frontend run test",
     "tests:e2e": "npm --workspace tests/e2e run test",
-    "tests:api": "npm --workspace tests/e2e/api run test",
-    "tests:db": "npm --workspace tests/e2e/db run test",
+    "tests:api": "npm --workspace tests/e2e run test:api",
+    "tests:api:report": "npm --workspace tests/e2e run report",
+    "tests:e2e:report": "npm --workspace tests/e2e run report",
     "tests:performance": "npm --workspace tests/performance run test",
-    "test:all": "npm run backend:test && npm run frontend:test && npm run tests:api && npm run tests:db && npm run tests:e2e && npm run tests:performance",
+    "test:all": "npm run backend:test && npm run frontend:test && npm run tests:api && npm run tests:e2e && npm run tests:performance",
     "lint": "npm --workspace backend run lint && npm --workspace frontend run lint"
   },
   "engines": {
