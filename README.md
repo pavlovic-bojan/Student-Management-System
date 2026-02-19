@@ -2,6 +2,10 @@
 
 Multi-tenant Student Management System (SMS): backend API and frontend web app.
 
+## Results for the last tests run
+
+- **Allure:** [https://pavlovic-bojan.github.io/Student-Management-System/](...)
+
 ## Live app
 
 - **Frontend (Vercel):** [https://student-management-system-frontend-topaz.vercel.app/](https://student-management-system-frontend-topaz.vercel.app/)
