@@ -143,4 +143,5 @@ Secrets (set in **Settings → Secrets and variables → Actions**):
 | **tests/** | Playwright (API + E2E) + k6 (performance) | [tests/README.md](tests/README.md) |
 | **tests/e2e/** | Playwright specs and POM | [tests/e2e/README.md](tests/e2e/README.md) |
 | **tests/performance/** | k6 load tests | [tests/performance/README.md](tests/performance/README.md) |
-| **project-doc/** | BRD, MVP checklist, and other project docs | — |
+| **docs/** | BRD, MVP checklist, and other project docs | — |
+ **images/** | auth page, admin page is how users see app | — |
