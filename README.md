@@ -4,7 +4,7 @@ Multi-tenant Student Management System (SMS): backend API and frontend web app.
 
 ## Live app
 
-- **Frontend (Vercel):** [https://student-management-system-frontend-topaz.vercel.app/auth/login?redirect=/](https://student-management-system-frontend-topaz.vercel.app/auth/login?redirect=/)
+- **Frontend (Vercel):** [https://student-management-system-frontend-topaz.vercel.app/](https://student-management-system-frontend-topaz.vercel.app/)
 
 ## Backend (API)
 
