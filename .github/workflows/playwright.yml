@@ -39,18 +39,18 @@ jobs:
 
       - name: 🧪 Run API tests
         env:
-          API_BASE_URL: ${{ secrets.BACKEND_URL }}
-          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
-          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+          API_BASE_URL: ${{ secrets.BACKEND_URL || 'https://student-management-system-backend-gwy8.onrender.com' }}
+          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL || 'platform-admin@sms.edu' }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD || 'seed-platform-admin-change-me' }}
         continue-on-error: true
         run: npm run test:api
         working-directory: tests/e2e
 
       - name: 🧪 Run E2E tests
         env:
-          BASE_URL: ${{ secrets.FRONTEND_URL }}
-          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
-          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+          BASE_URL: ${{ secrets.FRONTEND_URL || 'https://student-management-system-frontend-topaz.vercel.app' }}
+          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL || 'platform-admin@sms.edu' }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD || 'seed-platform-admin-change-me' }}
         continue-on-error: true
         run: npm run test:e2e
         working-directory: tests/e2e

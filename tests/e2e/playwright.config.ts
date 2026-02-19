@@ -24,7 +24,7 @@ export default defineConfig({
   projects: [
     {
       name: 'api',
-      testMatch: /tests\/api\/.*\.spec\.ts/,
+      testMatch: /tests\/e2e\/tests\/api\/.*\.spec\.ts/,
       use: {
         baseURL: apiBaseURL,
         extraHTTPHeaders: {
@@ -35,7 +35,7 @@ export default defineConfig({
     },
     {
       name: 'e2e',
-      testMatch: /tests\/e2e\/.*\.spec\.ts/,
+      testMatch: /tests\/e2e\/tests\/e2e\/.*\.spec\.ts/,
       use: {
         ...devices['Desktop Chrome'],
         baseURL: e2eBaseURL,
