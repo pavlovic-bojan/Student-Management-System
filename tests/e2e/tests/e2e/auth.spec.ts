@@ -18,8 +18,8 @@ test.describe('Auth E2E Tests', () => {
   });
 
   test('should login successfully and redirect to tickets', async ({ page }) => {
-    const email = process.env.TEST_USER_EMAIL ?? 'platform@test.edu';
-    const password = process.env.TEST_USER_PASSWORD ?? 'Password123!';
+    const email = process.env.TEST_USER_EMAIL ?? 'platform-admin@sms.edu';
+    const password = process.env.TEST_USER_PASSWORD ?? 'seed-platform-admin-change-me';
 
     const loginPage = new LoginPage(page);
     await loginPage.goto();

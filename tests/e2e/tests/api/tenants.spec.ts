@@ -2,10 +2,10 @@ import { test, expect } from '@playwright/test';
 import { validateAgainstSchema, schemas } from '../../lib/schema-validator';
 
 async function getAuthToken(request: import('@playwright/test').APIRequestContext): Promise<string | null> {
-  const loginRes = await request.post('auth/login', {
+  const loginRes = await request.post('api/auth/login', {
     data: {
-      email: process.env.TEST_USER_EMAIL ?? 'platform@test.edu',
-      password: process.env.TEST_USER_PASSWORD ?? 'Password123!',
+      email: process.env.TEST_USER_EMAIL ?? 'platform-admin@sms.edu',
+      password: process.env.TEST_USER_PASSWORD ?? 'seed-platform-admin-change-me',
     },
   });
   if (!loginRes.ok()) return null;
@@ -20,7 +20,7 @@ test.describe('Tenants API - JSON Schema Validation', () => {
       test.skip(true, 'No auth token - seed platform admin user');
     }
 
-    const response = await request.get('tenants', {
+    const response = await request.get('api/tenants', {
       headers: { Authorization: `Bearer ${authToken}` },
     });
 
@@ -35,7 +35,7 @@ test.describe('Tenants API - JSON Schema Validation', () => {
   });
 
   test('GET /tenants without token returns 401', async ({ request }) => {
-    const response = await request.get('tenants');
+    const response = await request.get('api/tenants');
     expect(response.status()).toBe(401);
   });
 });

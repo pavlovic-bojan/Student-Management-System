@@ -31,7 +31,7 @@ jobs:
 
       - name: 🧪 Run API tests
         env:
-          API_BASE_URL: ${{ secrets.BACKEND_URL }}/api
+          API_BASE_URL: ${{ secrets.BACKEND_URL }}
           TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
           TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
         run: npm run test:api

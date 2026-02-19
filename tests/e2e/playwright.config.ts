@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const apiBaseURL = process.env.API_BASE_URL ?? 'http://localhost:4000/api';
+// Origin only – paths must include 'api/' (e.g. api/health, api/auth/login)
+const apiBaseURL = process.env.API_BASE_URL ?? 'http://localhost:4000';
 const e2eBaseURL = process.env.BASE_URL ?? 'http://localhost:5173';
 
 export default defineConfig({

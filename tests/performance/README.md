@@ -116,3 +116,5 @@ tests/performance/
 
 - `GET /api/health` – No auth required, always tested
 - `GET /api/auth/me` – With JWT (when `AUTH_TOKEN` is set)
+
+See [root README](../../README.md) for live URLs. CI uses `BACKEND_URL` secret (origin); k6 builds `$BASE_URL/api/health`, etc.

@@ -3,7 +3,7 @@ import { validateAgainstSchema, schemas } from '../../lib/schema-validator';
 
 test.describe('Health API - JSON Schema Validation', () => {
   test('GET /health returns 200 and matches schema', async ({ request }) => {
-    const response = await request.get('health');
+    const response = await request.get('api/health');
     expect(response.status()).toBe(200);
 
     const body = await response.json();

@@ -56,9 +56,11 @@ tests/e2e/
 | Variable | Description |
 |----------|-------------|
 | `BASE_URL` | Frontend URL (default: `http://localhost:5173`) |
-| `API_BASE_URL` | Backend API URL (default: `http://localhost:4000/api`) |
-| `TEST_USER_EMAIL` | Test user for auth |
-| `TEST_USER_PASSWORD` | Test user password |
+| `API_BASE_URL` | Backend origin (default: `http://localhost:4000`). Paths include `api/` (e.g. `api/health`). |
+| `TEST_USER_EMAIL` | Test user (seed: `platform-admin@sms.edu`) |
+| `TEST_USER_PASSWORD` | Test user password (seed: `seed-platform-admin-change-me`) |
+
+See [root README](../../README.md) for live URLs and CI secrets.
 
 ## POM Rules (E2E)
 

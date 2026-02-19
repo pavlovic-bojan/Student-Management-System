@@ -93,9 +93,32 @@ These users are created by the backend seed script. Use them to log in to the ap
 
 **Tests:** `npm run backend:test:unit` and `npm run frontend:test` run without a database. Full `npm run test:all` (including backend integration tests) requires PostgreSQL; see LOCAL_SETUP.md.
 
+## GitHub Actions (CI)
+
+Workflows use these secrets. Set them in **Settings → Secrets and variables → Actions**:
+
+| Secret | Used by | Example value |
+|--------|---------|---------------|
+| `BACKEND_URL` | backend-deploy, playwright, performance | `https://student-management-system-backend-gwy8.onrender.com` |
+| `FRONTEND_URL` | playwright | `https://student-management-system-frontend-topaz.vercel.app` |
+| `TEST_USER_EMAIL` | playwright | `platform-admin@sms.edu` |
+| `TEST_USER_PASSWORD` | playwright | `seed-platform-admin-change-me` |
+| `DATABASE_URL` | backend-deploy | PostgreSQL connection string |
+| `TEST_DATABASE_URL` | backend-deploy | Test DB for integration tests |
+| `JWT_SECRET` | backend-deploy | Random string |
+| `SESSION_SECRET` | backend-deploy | Random string |
+| `RENDER_DEPLOY_HOOK` | backend-deploy | Render webhook URL |
+| `PERF_AUTH_TOKEN` | performance (optional) | JWT for auth endpoints |
+
+- **Backend health check** uses `$BACKEND_URL/api/health`
+- **Frontend build** uses `VITE_API_URL=$BACKEND_URL/api`
+- **Playwright API** uses `API_BASE_URL=$BACKEND_URL` and paths `api/health`, `api/auth/login`, etc.
+- **Performance (k6)** uses `BASE_URL=$BACKEND_URL`; endpoints are `$BASE_URL/api/health`, etc.
+
 ## Repository structure
 
 - **backend/** — Express + TypeScript + Prisma (PostgreSQL)
 - **frontend/** — Vue 3 + Vite + Quasar
-- **tests/** — E2E, API, DB, performance (placeholder scripts until tests are added)
+- **tests/e2e/** — Playwright (API + E2E tests)
+- **tests/performance/** — k6 performance tests
 - **project-doc/** — BRD, MVP checklist, and other project docs
