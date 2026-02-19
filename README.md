@@ -1,29 +1,34 @@
 # Student Management System
 
-Multi-tenant Student Management System (SMS): backend API and frontend web app.
+**SMS** – multi-tenant student management system for universities. Manages tenants (institutions), users, students, programs, courses, exams, finance, and tickets. Role-based access (Platform Admin, School Admin, Professor, Student) and full-stack monorepo (backend, frontend, tests).
 
-## Results for the last tests run
+Stack: **Express + TypeScript + Prisma (PostgreSQL)** for the API, **Vue 3 + Vite + Quasar** for the web app. Tests: **Playwright** (API + E2E) and **k6** (performance).
+
+## Test reports
 
 - **Allure Report:** [https://pavlovic-bojan.github.io/Student-Management-System/](https://pavlovic-bojan.github.io/Student-Management-System/) (deployed after each Playwright run on main)
 
 ## Live app
 
-- **Frontend (Vercel):** [https://student-management-system-frontend-topaz.vercel.app/](https://student-management-system-frontend-topaz.vercel.app/)
-
-## Backend (API)
-
-- **Base URL:** [https://student-management-system-backend-gwy8.onrender.com](https://student-management-system-backend-gwy8.onrender.com)
-- **API docs (Swagger UI):** [https://student-management-system-backend-gwy8.onrender.com/api-docs/](https://student-management-system-backend-gwy8.onrender.com/api-docs/)
+| Component | URL |
+|-----------|-----|
+| **Frontend** (Vercel) | [https://student-management-system-frontend-topaz.vercel.app/](https://student-management-system-frontend-topaz.vercel.app/) |
+| **Backend API** | [https://student-management-system-backend-gwy8.onrender.com](https://student-management-system-backend-gwy8.onrender.com) |
+| **Swagger UI** | [https://student-management-system-backend-gwy8.onrender.com/api-docs/](https://student-management-system-backend-gwy8.onrender.com/api-docs/) |
 
 API base path: `/api` (e.g. `/api/health`, `/api/auth/login`, `/api/tenants`).
 
-See [backend/README.md](backend/README.md) for local setup, env vars, and deployment.
+## Quick start
 
-## Frontend
+| Area | README | Commands |
+|------|--------|----------|
+| **Backend** | [backend/README.md](backend/README.md) | `npm run backend:dev` |
+| **Frontend** | [frontend/README.md](frontend/README.md) | `npm run frontend:dev` |
+| **Tests** | [tests/README.md](tests/README.md) | `npm run tests:api`, `npm run tests:e2e`, `npm run tests:performance` |
 
-Vue 3 + Vite + Quasar. See [frontend/README.md](frontend/README.md) for setup and run.
+## Seed users
 
-## Seed users (after `npm run prisma:seed` in backend)
+After `npm run prisma:seed` in [backend/](backend/) (see [backend/README.md](backend/README.md)):
 
 These users are created by the backend seed script. Use them to log in to the app (e.g. at the Vercel URL above). **Change passwords in production.**
 
@@ -91,11 +96,13 @@ These users are created by the backend seed script. Use them to log in to the ap
 
 *Seed does not create STUDENT login accounts; students exist as records but do not have user logins by default.*
 
-**Tests:** `npm run backend:test:unit` and `npm run frontend:test` run without a database. Full `npm run test:all` (including backend integration tests) requires PostgreSQL; see LOCAL_SETUP.md.
+**Tests:** Unit tests (`npm run backend:test:unit`, `npm run frontend:test`) run without a database. Full `npm run test:all` (including integration, API, E2E, performance) requires PostgreSQL. See [tests/README.md](tests/README.md) and [tests/e2e/README.md](tests/e2e/README.md), [tests/performance/README.md](tests/performance/README.md); for DB setup see LOCAL_SETUP.md.
 
 ## GitHub Actions (CI)
 
-Workflows use these secrets. Set them in **Settings → Secrets and variables → Actions**:
+Workflows: backend deploy (Render), frontend deploy (Vercel), [Playwright tests](.github/workflows/playwright.yml), [performance tests](.github/workflows/performance.yml).
+
+Secrets (set in **Settings → Secrets and variables → Actions**):
 
 | Secret | Used by | Example value |
 |--------|---------|---------------|
@@ -119,8 +126,11 @@ Workflows use these secrets. Set them in **Settings → Secrets and variables �
 
 ## Repository structure
 
-- **backend/** — Express + TypeScript + Prisma (PostgreSQL)
-- **frontend/** — Vue 3 + Vite + Quasar
-- **tests/e2e/** — Playwright (API + E2E tests)
-- **tests/performance/** — k6 performance tests
-- **project-doc/** — BRD, MVP checklist, and other project docs
+| Folder | Description | README |
+|--------|-------------|--------|
+| **backend/** | Express + TypeScript + Prisma (PostgreSQL) | [backend/README.md](backend/README.md) |
+| **frontend/** | Vue 3 + Vite + Quasar | [frontend/README.md](frontend/README.md) |
+| **tests/** | Playwright (API + E2E) + k6 (performance) | [tests/README.md](tests/README.md) |
+| **tests/e2e/** | Playwright specs and POM | [tests/e2e/README.md](tests/e2e/README.md) |
+| **tests/performance/** | k6 load tests | [tests/performance/README.md](tests/performance/README.md) |
+| **project-doc/** | BRD, MVP checklist, and other project docs | — |

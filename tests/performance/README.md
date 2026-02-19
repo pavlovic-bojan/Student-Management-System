@@ -2,6 +2,8 @@
 
 Performance tests for the SMS backend API. All tests are configured for **minimum** load (1–2 VUs, short duration) for fast validation in CI/CD.
 
+→ See [tests/README.md](../README.md) for overview and Docker.
+
 ## Test Scenarios
 
 | Test       | Description                | VUs | Duration      | CI |

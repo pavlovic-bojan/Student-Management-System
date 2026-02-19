@@ -1,0 +1,35 @@
+# Test artifacts
+test-results/
+playwright-report/
+allure-results/
+allure-report/
+coverage/
+*.lcov
+
+# Dependencies (reinstalled in image)
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+**/dist/
+**/build/
+
+# Env (pass at runtime)
+.env
+.env.*
+!.env.example
+
+# IDE, OS, logs
+.idea/
+.vscode/
+.DS_Store
+*.log
+
+# Cursor
+.cursor/
+
+# Prisma (backend)
+backend/prisma/migrations/
+*.db
+*.sqlite*

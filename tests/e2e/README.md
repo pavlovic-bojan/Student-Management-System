@@ -2,6 +2,8 @@
 
 Single Playwright instance with API tests (JSON schema validation) and E2E tests (POM).
 
+→ See [tests/README.md](../README.md) for overview and Docker.
+
 ## Setup
 
 ```bash

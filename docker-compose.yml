@@ -1,6 +1,8 @@
 # Local development / MVP hosting - PostgreSQL + Backend + Frontend
 # Usage: copy .env.example to .env in backend/ and set DATABASE_URL, JWT_SECRET, etc.
 #        Then: docker compose up --build
+#
+# Tests (optional, after up): docker compose --profile test run --rm tests [api|e2e|performance]
 
 services:
   postgres:
@@ -47,6 +49,25 @@ services:
       - "80:80"
     depends_on:
       - backend
+
+  # Run tests against backend + frontend (api | e2e | performance)
+  # Usage: docker compose run --rm tests [api|e2e|performance]
+  tests:
+    build:
+      context: .
+      dockerfile: tests/Dockerfile
+    environment:
+      API_BASE_URL: http://backend:4000
+      BASE_URL: http://frontend
+      TEST_USER_EMAIL: platform-admin@sms.edu
+      TEST_USER_PASSWORD: seed-platform-admin-change-me
+    depends_on:
+      backend:
+        condition: service_started
+      frontend:
+        condition: service_started
+    profiles:
+      - test
 
 volumes:
   postgres_data:
