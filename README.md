@@ -26,6 +26,8 @@ API base path: `/api` (e.g. `/api/health`, `/api/auth/login`, `/api/tenants`).
 | **Frontend** | [frontend/README.md](frontend/README.md) | `npm run frontend:dev` |
 | **Tests** | [tests/README.md](tests/README.md) | `npm run tests:api`, `npm run tests:e2e`, `npm run tests:performance` |
 
+**Docker** – for **local development only** (PostgreSQL + backend + frontend). Production runs on Render (backend) and Vercel (frontend). See [docker-compose.yml](docker-compose.yml) and [tests/README.md](tests/README.md#docker) for details.
+
 ## Seed users
 
 After `npm run prisma:seed` in [backend/](backend/) (see [backend/README.md](backend/README.md)):
