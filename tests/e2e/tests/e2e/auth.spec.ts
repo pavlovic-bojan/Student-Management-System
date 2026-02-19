@@ -13,8 +13,7 @@ test.describe('Auth E2E Tests', () => {
     await loginPage.goto();
     await loginPage.login('invalid@test.com', 'wrongpassword');
 
-    const hasError = await loginPage.hasErrorMessage();
-    expect(hasError).toBe(true);
+    await expect(page.locator(loginPage.errorMessage)).toBeVisible({ timeout: 5000 });
   });
 
   test('should login successfully and redirect to tickets', async ({ page }) => {
