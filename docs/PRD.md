@@ -5,118 +5,118 @@
 
 ## 1. Purpose
 
-Ovaj PRD definiše **functional requirements** i **user flows** za Multi-Tenant Student Management System (SMS). Usaglašen je sa [BRD.md](./BRD.md) i trenutnom implementacijom.
+This PRD defines **functional requirements** and **user flows** for the Multi-Tenant Student Management System (SMS). It is aligned with [BRD.md](./BRD.md) and the current implementation.
 
-Cilj je:
-- centralizovati upravljanje studentskim i administrativnim podacima više obrazovnih institucija
-- omogućiti role-based pristup (Platform Admin, School Admin, Professor, Student)
-- pružiti intuitivan web UI (Vue 3 + Quasar) sa drawer pattern-om za CRUD
+Objectives:
+- centralize management of student and administrative data across multiple educational institutions
+- enable role-based access (Platform Admin, School Admin, Professor, Student)
+- provide an intuitive web UI (Vue 3 + Quasar) with a drawer pattern for CRUD
 
 ---
 
 ## 2. Actors
 
-| Actor | Opis |
-|-------|------|
-| **Platform Admin** | Upravlja tenantima, kreira i upravlja korisnicima u bilo kom tenantu, vidi sve tikete |
-| **School Admin** | Upravlja studentima, programima, kursevima, ispitima, finansijama u svom tenantu; vidi tikete tenanta |
-| **Professor** | Kreira studente, upravlja kursevima i ispitima u tenantima kojima pripada; prima obaveštenja o izmenama svog naloga |
-| **Student** | Vidi svoje enrollmente, ispite, transkripte, finansije; prijavljuje bagove |
+| Actor | Description |
+|-------|-------------|
+| **Platform Admin** | Manages tenants, creates and manages users in any tenant, sees all tickets |
+| **School Admin** | Manages students, programs, courses, exams, finances in their tenant; sees tenant tickets |
+| **Professor** | Creates students, manages courses and exams in tenants they belong to; receives notifications about changes to their account |
+| **Student** | Views their enrollments, exams, transcripts, finances; reports bugs |
 
 ---
 
 ## 3. Multi-Tenancy
 
-- Svaka **institucija** (univerzitet, fakultet, škola) je **tenant**.
-- Tenant ima: `name`, `code` (jedinstven), `isActive`.
-- Svi podaci su izolovani po `tenantId`.
-- Platform Admin može prebacivati tenant kontekst (tenant switcher u header-u).
-- School Admin, Professor, Student koriste svoj `tenantId` iz JWT.
+- Each **institution** (university, faculty, school) is a **tenant**.
+- Tenant has: `name`, `code` (unique), `isActive`.
+- All data is isolated by `tenantId`.
+- Platform Admin can switch tenant context (tenant switcher in header).
+- School Admin, Professor, Student use their `tenantId` from JWT.
 
 ---
 
 ## 4. Tenant Management (BRD §7.0)
 
-### 4.1 Pravila
+### 4.1 Rules
 
-- Samo **Platform Admin** može kreirati, ažurirati ili deaktivirati tenante.
-- Školski admin, profesor i student nemaju pristup tenant CRUD-u.
+- Only **Platform Admin** can create, update, or deactivate tenants.
+- School Admin, Professor, and Student have no access to tenant CRUD.
 
 ### 4.2 UI
 
-- **Navigacija**: stavka "Tenants" samo za Platform Admin.
-- **Lista**: QTable sa kolonama name, code, isActive, akcije.
-- **Kreiranje / izmena**: desni drawer sa formom (name, code; za izmenu i isActive checkbox).
-- **Deaktivacija**: preko isActive = false (nema hard delete).
+- **Navigation**: "Tenants" item only for Platform Admin.
+- **List**: QTable with columns name, code, isActive, actions.
+- **Create / Edit**: right drawer with form (name, code; for edit also isActive checkbox).
+- **Deactivation**: via isActive = false (no hard delete).
 
 ### 4.3 API
 
-- `GET /api/tenants` – lista svih tenanata (Platform Admin only)
-- `POST /api/tenants` – kreiranje (name, code)
-- `PATCH /api/tenants/:id` – izmena (name, code, isActive)
+- `GET /api/tenants` – list all tenants (Platform Admin only)
+- `POST /api/tenants` – create (name, code)
+- `PATCH /api/tenants/:id` – update (name, code, isActive)
 
 ---
 
 ## 5. User Creation and Management (BRD §7.1)
 
-### 5.1 Ko može koga kreirati
+### 5.1 Who Can Create Whom
 
-| Kreator | Može kreirati | Tenant scope |
-|---------|---------------|--------------|
-| Platform Admin | bilo koju ulogu | bilo koji tenant |
-| School Admin | School Admin, Professor, Student | samo sopstveni tenant |
-| Professor | Student | samo tenant(i) u kojima je profesor |
+| Creator | Can Create | Tenant Scope |
+|---------|------------|--------------|
+| Platform Admin | any role | any tenant |
+| School Admin | School Admin, Professor, Student | own tenant only |
+| Professor | Student | only tenant(s) where they are a professor |
 | Student | — | — |
 
 ### 5.2 UI
 
-- **Platform Admin**: Users stranica, tenant selector, "Platform Admin users" opcija, drawer za create user.
-- **School Admin**: Users stranica za svoj tenant, drawer za create user.
-- **Professor**: samo "Create student" u meniju (bez liste korisnika).
-- **Student**: nema kreiranje korisnika.
+- **Platform Admin**: Users page, tenant selector, "Platform Admin users" option, drawer for create user.
+- **School Admin**: Users page for their tenant, drawer for create user.
+- **Professor**: only "Create student" in menu (no user list).
+- **Student**: no user creation.
 
-### 5.3 Pravila
+### 5.3 Rules
 
-- Nema javne registracije.
-- Platform Admin pri kreiranju PLATFORM_ADMIN korisnika ne bira tenant (automatski se postavlja).
-- Suspend = blokiran nalog; suspendovani korisnici dobijaju 403 pri loginu.
-- Nije dozvoljeno brisanje sopstvenog naloga.
+- No public registration.
+- Platform Admin when creating PLATFORM_ADMIN users does not select tenant (set automatically).
+- Suspend = blocked account; suspended users receive 403 on login.
+- Self-deletion of own account is not allowed.
 
 ### 5.4 API
 
-- `POST /auth/register` – kreiranje korisnika (auth obavezan)
-- `GET /users?tenantId=` – lista korisnika tenanta
-- `GET /users/platform-admins` – lista Platform Admin korisnika (Platform Admin only)
-- `PATCH /users/:id` – izmena (firstName, lastName, role, suspended)
-- `DELETE /users/:id` – brisanje korisnika
+- `POST /auth/register` – create user (auth required)
+- `GET /users?tenantId=` – list users of tenant
+- `GET /users/platform-admins` – list Platform Admin users (Platform Admin only)
+- `PATCH /users/:id` – update (firstName, lastName, role, suspended)
+- `DELETE /users/:id` – delete user
 
 ---
 
 ## 6. Bug Reporting and Tickets (BRD §7.2)
 
-### 6.1 Polja
+### 6.1 Fields
 
-- Subject / Title (obavezno, 5–200 kar)
-- Description (obavezno, 10–2000 kar)
-- Page, Steps, Expected vs actual (opciono, sa min/max)
+- Subject / Title (required, 5–200 chars)
+- Description (required, 10–2000 chars)
+- Page, Steps, Expected vs actual (optional, with min/max)
 
-### 6.2 Pravila
+### 6.2 Rules
 
-- Bilo koji autentifikovani korisnik može prijaviti bag za trenutni tenant.
-- Rate limit: cooldown između submisija (npr. 60s).
-- Tiketi imaju status (NEW, IN_PROGRESS, RESOLVED) i isPriority.
+- Any authenticated user can report a bug for the current tenant.
+- Rate limit: cooldown between submissions (e.g. 60s).
+- Tickets have status (NEW, IN_PROGRESS, RESOLVED) and isPriority.
 
-### 6.3 Vidljivost
+### 6.3 Visibility
 
-- **Platform Admin**: vidi sve tikete, uključujući platform-scoped (kreirane od Platform Admin-a).
-- **School Admin**: vidi tikete samo svog tenanta, **bez** tiketa koje je kreirao Platform Admin.
-- **Professor / Student**: ne vidi listu tiketa (samo može submitovati).
+- **Platform Admin**: sees all tickets, including platform-scoped (created by Platform Admin).
+- **School Admin**: sees only tickets of their tenant, **excluding** tickets created by Platform Admin.
+- **Professor / Student**: does not see ticket list (can only submit).
 
 ### 6.4 API
 
-- `POST /api/tickets` – kreiranje tiketa
-- `GET /api/tickets` – lista (Platform/School admin; filteri: status, priorityOnly)
-- `PATCH /api/tickets/:id` – izmena statusa/prioriteta
+- `POST /api/tickets` – create ticket
+- `GET /api/tickets` – list (Platform/School admin; filters: status, priorityOnly)
+- `PATCH /api/tickets/:id` – update status/priority
 
 ---
 
@@ -124,47 +124,47 @@ Cilj je:
 
 ### 7.1 Ticket Notifications
 
-- Frontend poll-uje nove tikete (status NEW).
-- Platform Admin vidi platform-tikete; School Admin vidi tikete tenanta (bez onih od Platform Admin-a).
-- Profesor i Student ne primaju ticket obaveštenja.
+- Frontend polls for new tickets (status NEW).
+- Platform Admin sees platform tickets; School Admin sees tenant tickets (excluding those from Platform Admin).
+- Professor and Student do not receive ticket notifications.
 
 ### 7.2 User-Action Notifications
 
-- **Platform Admin** kreira/ažurira/briše korisnika → svi **School Admin** tog tenanta dobijaju obaveštenje.
-- **School Admin** ažurira korisnika → **taj korisnik** dobija obaveštenje (npr. "Your account was updated by School Admin").
-- Profesor i Student vide samo obaveštenja koja se **tiču njih lično** (npr. izmena njihovog naloga).
+- **Platform Admin** creates/updates/deletes user → all **School Admins** of that tenant receive notification.
+- **School Admin** updates user → **that user** receives notification (e.g. "Your account was updated by School Admin").
+- Professor and Student see only notifications **concerning them personally** (e.g. changes to their account).
 
 ### 7.3 UI
 
-- Ikona zvona u header-u sa badge-om (broj nepročitanih).
-- Stranica "Notifications" – lista ticket + user-action obaveštenja.
-- "Mark all as read" – očisti lokalno i označi preko API-ja.
+- Bell icon in header with badge (unread count).
+- "Notifications" page – list of ticket + user-action notifications.
+- "Mark all as read" – clears locally and marks via API.
 
 ### 7.4 API
 
-- `GET /api/notifications?unreadOnly=` – lista obaveštenja za trenutnog korisnika
-- `POST /api/notifications/mark-read` – označavanje kao pročitano (body: `{ ids: [...] }`)
+- `GET /api/notifications?unreadOnly=` – list notifications for current user
+- `POST /api/notifications/mark-read` – mark as read (body: `{ ids: [...] }`)
 
 ---
 
 ## 8. Students
 
-- Student = osoba; enrollment = student u tenantu (StudentTenant).
-- Jedan student može biti upisan u više institucija.
+- Student = person; enrollment = student in tenant (StudentTenant).
+- One student can be enrolled in multiple institutions.
 - Status: ACTIVE, GRADUATED, DROPPED, SUSPENDED.
-- Platform Admin mora proslediti `tenantId` pri kreiranju; School Admin koristi svoj tenant.
+- Platform Admin must pass `tenantId` when creating; School Admin uses their tenant.
 
 ---
 
 ## 9. Programs, Courses, Exams, Finance, Records
 
-- **Programs**: CRUD, versioning, povezivanje sa kursevima.
+- **Programs**: CRUD, versioning, linking with courses.
 - **Courses**: CRUD, course offerings (term, year), professor assignment, enrollments.
 - **Exams**: Periods, Terms, Registrations, grading.
 - **Finance**: Tuitions, Payments.
 - **Records**: Transcripts, GPA.
 
-Sve operacije su tenant-scoped. Frontend koristi drawer pattern za CRUD forme.
+All operations are tenant-scoped. Frontend uses drawer pattern for CRUD forms.
 
 ---
 
@@ -172,9 +172,9 @@ Sve operacije su tenant-scoped. Frontend koristi drawer pattern za CRUD forme.
 
 - RESTful, JSON
 - JWT Bearer authentication
-- `x-tenant-id` header za Platform Admin tenant switcher
-- Validacija ulaza (express-validator)
-- Standardni HTTP status kodovi
+- `x-tenant-id` header for Platform Admin tenant switcher
+- Input validation (express-validator)
+- Standard HTTP status codes
 
 ---
 
@@ -182,16 +182,16 @@ Sve operacije su tenant-scoped. Frontend koristi drawer pattern za CRUD forme.
 
 - Responsive UI (desktop/tablet/mobile)
 - i18n: en, sr-lat, sr-cyr
-- Pristupačnost (WCAG 2.1 AA gde je moguće)
-- Performanse: API odgovor \<200ms P95 (cilj)
+- Accessibility (WCAG 2.1 AA where possible)
+- Performance: API response <200ms P95 (target)
 
 ---
 
 ## 12. Success Criteria
 
-- Platform Admin može upravljati tenantima i korisnicima.
-- School Admin može upravljati studentima, programima, kursevima, ispitima, finansijama.
-- Profesor može kreirati studente i upravljati kursevima/ispitima.
-- Student vidi svoje podatke i može prijaviti bag.
-- Obaveštenja su ispravno filtrirana po ulozi (ticket + user-action).
-- Multi-tenancy je uspešno izolovan.
+- Platform Admin can manage tenants and users.
+- School Admin can manage students, programs, courses, exams, finances.
+- Professor can create students and manage courses/exams.
+- Student sees their data and can report bugs.
+- Notifications are correctly filtered by role (ticket + user-action).
+- Multi-tenancy is successfully isolated.

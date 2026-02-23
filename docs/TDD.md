@@ -5,25 +5,25 @@
 
 ## 1. Document Purpose
 
-Ovaj dokument definiše **tehnički dizajn** Multi-Tenant Student Management System platforme. TDD služi kao:
+This document defines the **technical design** of the Multi-Tenant Student Management System platform. The TDD serves as:
 
-- Tehnički blueprint za implementaciju
-- Referenca za API i domain model
-- Osnova za test strategiju
-- Ulaz za OpenAPI / API-first development
+- Technical blueprint for implementation
+- Reference for API and domain model
+- Basis for test strategy
+- Input for OpenAPI / API-first development
 
-Usaglašen je sa [BRD.md](./BRD.md) i [HLD.md](./HLD.md).
+It is aligned with [BRD.md](./BRD.md) and [HLD.md](./HLD.md).
 
 ---
 
 ## 2. System Overview
 
-Sistem omogućava:
+The system provides:
 
-- Multi-tenant upravljanje obrazovnim institucijama (tenanti)
-- CRUD za korisnike, studente, programe, kurseve, ispite, finansije, transkripte
-- Bug reporting (tiketi) i obaveštenja (ticket + user-action)
-- Vue 3 + Quasar SPA sa drawer-based UX
+- Multi-tenant management of educational institutions (tenants)
+- CRUD for users, students, programs, courses, exams, finances, transcripts
+- Bug reporting (tickets) and notifications (ticket + user-action)
+- Vue 3 + Quasar SPA with drawer-based UX
 
 ---
 
@@ -31,10 +31,10 @@ Sistem omogućava:
 
 ### 3.1 Architectural Style
 
-- **Modular monolith** (jedna backend aplikacija, domain moduli)
+- **Modular monolith** (single backend application, domain modules)
 - Stateless REST API
 - Multi-tenant architecture (shared schema, tenant_id)
-- Pripremljen za buduću ekstrakciju u mikroservise
+- Prepared for future extraction into microservices
 
 ### 3.2 Logical Components
 
@@ -67,11 +67,11 @@ Sistem omogućava:
 
 ## 5. Multi-Tenancy Strategy
 
-- **Tenant ID** u JWT (`tenantId` claim)
-- **x-tenant-id** header za Platform Admin tenant switcher
-- Middleware `tenantContext` postavlja `req.tenantId`
-- Svi tenant-scoped upiti filtriraju po `tenantId`
-- Repository/Services primaju `tenantId` eksplicitno gde je potrebno
+- **Tenant ID** in JWT (`tenantId` claim)
+- **x-tenant-id** header for Platform Admin tenant switcher
+- Middleware `tenantContext` sets `req.tenantId`
+- All tenant-scoped queries filter by `tenantId`
+- Repository/Services receive `tenantId` explicitly where needed
 
 ---
 
@@ -81,18 +81,18 @@ Sistem omogućava:
 
 #### User
 - id, email, password, firstName, lastName, role (UserRole), tenantId, suspended
-- Relacije: tenant, userTenants (UserTenant), tickets, notifications
+- Relations: tenant, userTenants (UserTenant), tickets, notifications
 
 #### Tenant
 - id, name, code (unique), isActive, createdAt, updatedAt
-- Relacije: users, programs, courses, tickets, itd.
+- Relations: users, programs, courses, tickets, etc.
 
 #### UserTenant
-- userId, tenantId (professor na više institucija)
+- userId, tenantId (professor at multiple institutions)
 
 #### Student
 - id, firstName, lastName, status (ACTIVE, GRADUATED, DROPPED, SUSPENDED)
-- Relacije: studentTenants, enrollments, transcripts, payments
+- Relations: studentTenants, enrollments, transcripts, payments
 
 #### StudentTenant (enrollment)
 - id, studentId, tenantId, indexNumber, programId
@@ -124,35 +124,35 @@ Sistem omogućava:
 
 ### 7.1 Base Path
 
-- `/api` (npr. `http://localhost:4000/api`)
+- `/api` (e.g. `http://localhost:4000/api`)
 
 ### 7.2 Authentication
 
-- **Bearer JWT** u `Authorization` header-u
-- JWT sadrži: `sub` (userId), `tenantId`, `role`
-- Nezaštićene rute: `/auth/login`, `/auth/forgot-password`, `/api/health`
-- Ostale rute zahtevaju `authenticate` middleware
+- **Bearer JWT** in `Authorization` header
+- JWT contains: `sub` (userId), `tenantId`, `role`
+- Unprotected routes: `/auth/login`, `/auth/forgot-password`, `/api/health`
+- Other routes require `authenticate` middleware
 
 ### 7.3 Authorization Middleware
 
-| Middleware | Svrha |
-|------------|-------|
-| `authenticate` | Proverava JWT, postavlja req.user |
-| `tenantContext` | Proverava tenant kontekst (Platform Admin mora imati x-tenant-id za neke rute) |
-| `requirePlatformAdmin` | Samo PLATFORM_ADMIN |
-| `requireAdminOrSchoolAdmin` | PLATFORM_ADMIN ili SCHOOL_ADMIN |
-| `requireCanCreateUser` | Platform Admin, School Admin ili Professor |
+| Middleware | Purpose |
+|------------|---------|
+| `authenticate` | Validates JWT, sets req.user |
+| `tenantContext` | Validates tenant context (Platform Admin must have x-tenant-id for some routes) |
+| `requirePlatformAdmin` | PLATFORM_ADMIN only |
+| `requireAdminOrSchoolAdmin` | PLATFORM_ADMIN or SCHOOL_ADMIN |
+| `requireCanCreateUser` | Platform Admin, School Admin, or Professor |
 
 ### 7.4 Error Model
 
-| Code | Značenje |
-|------|----------|
+| Code | Meaning |
+|------|---------|
 | 400 | Validation error |
 | 401 | Missing or invalid token |
 | 403 | Forbidden (role/tenant) |
 | 404 | Entity not found |
-| 409 | Conflict (duplicate code, email, itd.) |
-| 429 | Rate limit (npr. ticket cooldown) |
+| 409 | Conflict (duplicate code, email, etc.) |
+| 429 | Rate limit (e.g. ticket cooldown) |
 | 500 | Internal server error |
 
 ---
@@ -172,10 +172,10 @@ Sistem omogućava:
 - listStudents, createStudent, addStudentToTenant, deleteEnrollment, updateStudent
 
 ### 8.4 Programs, Courses, Exams, Finance, Records
-- CRUD operacije po domenu, tenant-scoped
+- CRUD operations per domain, tenant-scoped
 
 ### 8.5 Tickets Service
-- createTicket (rate limit), listTickets (filter za School Admin: exclude Platform Admin tickets), updateTicket
+- createTicket (rate limit), listTickets (filter for School Admin: exclude Platform Admin tickets), updateTicket
 
 ### 8.6 Notifications Service
 - listNotificationsForUser, markNotificationsRead
@@ -188,7 +188,7 @@ Sistem omogućava:
 
 ```
 frontend/src/
-  api/          # API clienti (axios), per-domain (auth, tenants, students, ...)
+  api/          # API clients (axios), per-domain (auth, tenants, students, ...)
   components/   # Reusable components (DarkModeToggle, ...)
   layouts/      # AuthLayout, MainLayout
   pages/        # Route components (LoginPage, TenantsPage, StudentsPage, ...)
@@ -199,26 +199,26 @@ frontend/src/
 
 ### 9.2 Router Guards
 
-- `requireAuth` – za zaštićene rute
-- `guestOnly` – za login/register
-- `requirePlatformAdmin` – za /tenants
-- `requireAdminOrSchoolAdmin` – za /users
-- `requireCanCreateUser` – za create user/student
+- `requireAuth` – for protected routes
+- `guestOnly` – for login/register
+- `requirePlatformAdmin` – for /tenants
+- `requireAdminOrSchoolAdmin` – for /users
+- `requireCanCreateUser` – for create user/student
 
 ### 9.3 UX Pattern
 
-- **Drawers** za sve CRUD forme (ne modali)
-- **QTable** za liste sa sortiranjem, filterima, paginacijom
-- **Tenant switcher** u header-u za Platform Admin
-- **i18n** – svi stringovi preko `t('key')`
+- **Drawers** for all CRUD forms (not modals)
+- **QTable** for lists with sorting, filters, pagination
+- **Tenant switcher** in header for Platform Admin
+- **i18n** – all strings via `t('key')`
 
 ---
 
 ## 10. Concurrency & Consistency
 
-- ACID transakcije (Prisma)
-- Unique constraints u DB (code, email, indexNumber u tenantu)
-- Optimistic UI ažuriranja gde je moguće
+- ACID transactions (Prisma)
+- Unique constraints in DB (code, email, indexNumber within tenant)
+- Optimistic UI updates where possible
 - Ticket cooldown per user (60s)
 
 ---
@@ -226,34 +226,34 @@ frontend/src/
 ## 11. Test Strategy
 
 ### 11.1 Backend Unit Tests
-- Service logic (auth, tenants, students, tickets, itd.)
+- Service logic (auth, tenants, students, tickets, etc.)
 - Middleware (authenticate, requirePlatformAdmin, tenantContext)
 
 ### 11.2 Backend Integration Tests
-- REST endpoints sa test DB (SKIP_AUTH_FOR_TESTS, x-test-user-id, x-test-tenant-id, x-test-role)
+- REST endpoints with test DB (SKIP_AUTH_FOR_TESTS, x-test-user-id, x-test-tenant-id, x-test-role)
 
 ### 11.3 Frontend Unit Tests
-- Store logika (auth, tenants, students, itd.)
+- Store logic (auth, tenants, students, etc.)
 - Router guards
 
 ### 11.4 Frontend Component Tests
-- Smoke testovi za stranice (mount sa Quasar, i18n, Pinia)
-- DarkModeToggle, MainLayout, itd.
+- Smoke tests for pages (mount with Quasar, i18n, Pinia)
+- DarkModeToggle, MainLayout, etc.
 
 ### 11.5 E2E & Performance
-- Playwright (future)
-- k6 load tests (future)
+- Playwright (implemented)
+- k6 load tests (implemented)
 
 ---
 
 ## 12. Security Considerations
 
-- bcrypt za lozinke (SALT_ROUNDS=10)
+- bcrypt for passwords (SALT_ROUNDS=10)
 - JWT expiration (7d)
 - Input validation (express-validator)
-- Tenant isolation u svim query-ima
-- Suspendirani korisnici: 403 na login
-- Self-delete zabranjen
+- Tenant isolation in all queries
+- Suspended users: 403 on login
+- Self-delete forbidden
 
 ---
 
@@ -261,7 +261,7 @@ frontend/src/
 
 - Health check: `GET /api/health` → `{ status: "ok" }`
 - Error handling middleware (centralized)
-- Swagger/OpenAPI dokumentacija u `backend/openapi.yaml`
+- Swagger/OpenAPI documentation in `backend/openapi.yaml`
 - Future: structured logging, metrics, tracing
 
 ---
@@ -269,22 +269,20 @@ frontend/src/
 ## 14. Deployment & Operations
 
 - **Backend**: Docker image, env: DATABASE_URL, JWT_SECRET
-- **Frontend**: Vite build → static files, Vercel rewrites za SPA
+- **Frontend**: Vite build → static files, Vercel rewrites for SPA
 - **Database**: Prisma migrate deploy
 
 ---
 
 ## 15. Future Extensions
 
-- Event-driven messaging (RabbitMQ/Kafka) za decoupling
-- Ekstrakcija domena u mikroservise
-- E2E testovi (Playwright)
-- k6 performance testovi
-- Payment gateway integracija
+- Event-driven messaging (RabbitMQ/Kafka) for decoupling
+- Domain extraction into microservices
+- Payment gateway integration
 - SSO / OAuth2 providers
 
 ---
 
 ## 16. Appendix: OpenAPI
 
-Puna API specifikacija je u [docs/OpenAPI.yaml](./OpenAPI.yaml) i `backend/openapi.yaml`.
+Full API specification is in [docs/OpenAPI.yaml](./OpenAPI.yaml) and `backend/openapi.yaml`.
