@@ -2,7 +2,7 @@
 
 **SMS** – multi-tenant student management system for universities. Manages tenants (institutions), users, students, programs, courses, exams, finance, and tickets. Role-based access (Platform Admin, School Admin, Professor, Student) and full-stack monorepo (backend, frontend, tests).
 
-Stack: **Express + TypeScript + Prisma (PostgreSQL)** for the API, **Vue 3 + Vite + Quasa + tailwindcssr + Docker** for web app dev. Tests: **Playwright** (API + E2E) and **k6** (performance).
+Stack: **Express + TypeScript + Prisma (PostgreSQL)** for the API, **Vue 3 + Vite + Quasa + tailwindcss + Docker** for web app dev. Tests: **Playwright** (API + E2E) and **k6** (performance).
 
 ## Test reports
 
